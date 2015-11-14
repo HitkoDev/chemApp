@@ -1,1 +1,0 @@
-Sem spada vsa dokumentacija projekta, vključno z mislenim vzorcem in MS Project datotekami

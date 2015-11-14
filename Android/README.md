@@ -1,1 +1,0 @@
-Tu bo celotna koda aplikacije
