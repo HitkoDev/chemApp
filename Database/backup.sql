@@ -27,7 +27,7 @@ CREATE TABLE `modx_chemapp_level` (
   `name` text NOT NULL,
   `description` mediumtext NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=10 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=11 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -36,7 +36,7 @@ CREATE TABLE `modx_chemapp_level` (
 
 LOCK TABLES `modx_chemapp_level` WRITE;
 /*!40000 ALTER TABLE `modx_chemapp_level` DISABLE KEYS */;
-INSERT INTO `modx_chemapp_level` VALUES (1,'Osnova šola','Snov, ki spada v osnovno šolo'),(2,'Gimnazija','Snov, ki spada v gimnazijo');
+INSERT INTO `modx_chemapp_level` VALUES (1,'Osnova šola','Snov, ki spada v osnovno šolo'),(2,'Gimnazija','Snov, ki spada v gimnazijo'),(10,'Level','jhgkjg');
 /*!40000 ALTER TABLE `modx_chemapp_level` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -124,4 +124,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-11-14 13:35:56
+-- Dump completed on 2015-11-14 13:38:27
