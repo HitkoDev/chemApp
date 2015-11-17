@@ -37,7 +37,7 @@ CREATE TABLE `modx_chemapp_level` (
 
 LOCK TABLES `modx_chemapp_level` WRITE;
 /*!40000 ALTER TABLE `modx_chemapp_level` DISABLE KEYS */;
-INSERT INTO `modx_chemapp_level` VALUES (1,'Osnova šola','Snov, ki spada v osnovno šolo',0),(2,'Gimnazija','Snov, ki spada v gimnazijo',0);
+INSERT INTO `modx_chemapp_level` VALUES (1,'Osnova šola','Snov, ki spada v osnovno šolo',0),(2,'Gimnazija','Snov, ki spada v gimnazijo',1);
 /*!40000 ALTER TABLE `modx_chemapp_level` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -126,4 +126,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-11-16 20:07:34
+-- Dump completed on 2015-11-17  6:16:47
