@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 5.5.46, for debian-linux-gnu (x86_64)
 --
--- Host: localhost    Database: amarant
+-- Host: localhost    Database: amaranth
 -- ------------------------------------------------------
 -- Server version	5.5.46-0+deb8u1
 
@@ -28,7 +28,7 @@ CREATE TABLE `modx_chemapp_level` (
   `description` mediumtext NOT NULL,
   `order` int(10) NOT NULL DEFAULT '999999',
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -126,4 +126,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-11-19 16:34:08
+-- Dump completed on 2015-11-19 17:09:00

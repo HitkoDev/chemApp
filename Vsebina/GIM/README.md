@@ -1,1 +1,0 @@
-Tu ustvari mape glede na razporeditev snovi. V vsako mapo daj datoteko s kratkim povzetkom.

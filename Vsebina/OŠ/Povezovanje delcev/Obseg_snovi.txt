@@ -1,4 +1,0 @@
-Vsebuje:
-	- Ionska vez,
-	- Kovalentna vez,
-	- Lastnosti kovalentnih in ionskih vezi.
