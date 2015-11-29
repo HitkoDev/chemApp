@@ -1,8 +1,5 @@
 package com.hitkoDev.chemApp;
 
-import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
@@ -15,13 +12,22 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import com.hitkoDev.chemApp.data.Level;
 import com.hitkoDev.chemApp.rest.LoadDataTask;
+import com.hitkoDev.chemApp.rest.OnJSONResponseListener;
+import java.util.ArrayList;
+import java.util.logging.Logger;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  *
  * @author hitno
  */
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+    
+    private ArrayList<Level> levels = new ArrayList();
     
     @Override
     protected void onCreate(Bundle bundle) {
@@ -45,6 +51,29 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+        
+        new LoadDataTask(this, new OnJSONResponseListener() {
+            @Override
+            public void onSuccess(JSONObject response) {
+                try {
+                    JSONArray l = response.getJSONArray("results");
+                    for(int i = 0; i < l.length(); i++){
+                        try {
+                            levels.add(new Level(l.getJSONObject(i)));
+                        } catch (JSONException ex) {
+                            Logger.getLogger(MainActivity.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+                        }
+                    }
+                } catch (JSONException ex) {
+                    Logger.getLogger(MainActivity.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+                }
+            }
+
+            @Override
+            public void onFail(String response) {
+                System.out.println(response);
+            }
+        }).executeCached("level");
     }
 
     @Override
@@ -87,11 +116,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         switch (id) {
         // Handle the camera action
             case R.id.nav_lessons:
-                if(checkNetwork()){
-                    new LoadDataTask(this).execute("section", "9");
-                } else {
-                    System.out.println(this.getString(R.string.no_network));
-                }
                 break;
             case R.id.nav_exercises:
                 break;
@@ -106,12 +130,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
-    }
-    
-    public boolean checkNetwork(){
-        ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
-        return networkInfo != null && networkInfo.isConnected();
     }
     
 }
