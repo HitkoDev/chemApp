@@ -82,17 +82,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         switch (id) {
         // Handle the camera action
-            case R.id.nav_camera:
+            case R.id.nav_lessons:
                 break;
-            case R.id.nav_gallery:
+            case R.id.nav_exercises:
                 break;
-            case R.id.nav_slideshow:
+            case R.id.nav_exam:
                 break;
-            case R.id.nav_manage:
-                break;
-            case R.id.nav_share:
-                break;
-            case R.id.nav_send:
+            case R.id.nav_settings:
                 break;
             default:
                 break;
