@@ -12,6 +12,8 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageButton;
+import android.widget.TextView;
 import com.hitkoDev.chemApp.data.Level;
 import com.hitkoDev.chemApp.rest.LoadDataTask;
 import com.hitkoDev.chemApp.rest.OnJSONResponseListener;
@@ -28,6 +30,9 @@ import org.json.JSONObject;
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     
     private ArrayList<Level> levels = new ArrayList();
+    private NavigationView navigationView;
+    private boolean lvl;
+    private int level;
     
     @Override
     protected void onCreate(Bundle bundle) {
@@ -49,8 +54,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         drawer.setDrawerListener(toggle);
         toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+        lvl = navigationView.getMenu().findItem(R.id.nav_lessons) == null;
         
         new LoadDataTask(this, new OnJSONResponseListener() {
             @Override
@@ -107,29 +113,76 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         return super.onOptionsItemSelected(item);
     }
+    
+    private void setLevel(int l){
+        level = l;
+        TextView tw = (TextView) navigationView.getHeaderView(0).findViewById(R.id.textView);
+        tw.setText("");
+        if(level > 0){
+            for(Level lv : levels) if(lv.getId() == level){
+                tw.setText(lv.getName());
+                break;
+            }
+        }
+        lvl = true;
+        toggleDrawerMenu(null);
+    }
 
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
+        lvl = navigationView.getMenu().findItem(R.id.nav_lessons) == null;
+        
+        if(lvl){
+            
+            setLevel(id);
+            
+        } else {
 
-        switch (id) {
-        // Handle the camera action
-            case R.id.nav_lessons:
-                break;
-            case R.id.nav_exercises:
-                break;
-            case R.id.nav_exam:
-                break;
-            case R.id.nav_settings:
-                break;
-            default:
-                break;
+            switch (id) {
+            // Handle the camera action
+                case R.id.nav_lessons:
+                    break;
+                case R.id.nav_exercises:
+                    break;
+                case R.id.nav_exam:
+                    break;
+                case R.id.nav_settings:
+                    break;
+                default:
+                    break;
+            }
+            
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+    
+    public void toggleDrawerMenu(View v){
+        MenuItem item = navigationView.getMenu().findItem(R.id.nav_lessons);
+        lvl = !lvl;
+        if(lvl){
+            if(item != null){
+                navigationView.getMenu().clear();
+                navigationView.inflateMenu(R.menu.drawer_select_level);
+                Menu m = navigationView.getMenu();
+                for(Level l : levels) m.add(R.id.nav_levels, l.getId(), 0, l.getName());
+            } else {
+                Menu m = navigationView.getMenu();
+                for(Level l : levels) if(m.findItem(l.getId()) == null) m.add(R.id.nav_levels, l.getId(), 0, l.getName());
+            }
+        } else {
+            if(item == null){
+                navigationView.getMenu().clear();
+                navigationView.inflateMenu(R.menu.activity_main_drawer);
+            }
+        }
+        
+        ImageButton ib = (ImageButton) navigationView.getHeaderView(0).findViewById(R.id.toggle_levels);
+        ib.setImageResource(lvl ? R.drawable.ic_collapse : R.drawable.ic_expand);
     }
     
 }

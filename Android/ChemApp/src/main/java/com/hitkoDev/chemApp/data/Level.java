@@ -26,7 +26,7 @@ public class Level {
         if(o.has("id")) id = o.getInt("id");
         if(o.has("name")) name = o.getString("name");
         if(o.has("description")) desc = o.getString("description");
-        if(o.has("order")) id = o.getInt("order");
+        if(o.has("order")) order = o.getInt("order");
         if(o.has("sections")){
             JSONArray sec = o.getJSONArray("sections");
             sections = new ArrayList();
@@ -35,6 +35,14 @@ public class Level {
             }
         }
         System.out.println(name);
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getId() {
+        return id;
     }
     
 }
