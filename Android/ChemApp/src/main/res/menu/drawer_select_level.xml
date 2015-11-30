@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <group 
         android:id="@+id/nav_levels"
@@ -7,8 +9,16 @@
     </group>
     
     <item
-        android:id="@+id/nav_log_in_out"
+        android:id="@+id/nav_log_in"
         android:icon="@drawable/ic_play"
         android:orderInCategory="100"
+        app:itemIconTint="@color/playGames"
         android:title="Prijava" />
+    
+    <item
+        android:id="@+id/nav_log_out"
+        android:icon="@drawable/ic_play"
+        android:orderInCategory="100"
+        android:visibility="gone"
+        android:title="Odjava" />
 </menu>

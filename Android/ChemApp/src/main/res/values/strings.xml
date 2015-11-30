@@ -11,6 +11,7 @@
     <string name="dialog_retry">Poskusi znova</string>
     <string name="signin_failure">Napaka ob prijavi</string>
     <string name="signin_other_error">Napake ob prijavi</string>
+    <string name="not_logged_in">Neprijavljen</string>
     
     <string name="rest_base">https://amaranth.hitko.si/rest/</string>
 </resources>

@@ -1,10 +1,14 @@
 package com.hitkoDev.chemApp;
 
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -42,6 +46,9 @@ public class MainActivity extends AppCompatActivity implements
     private NavigationView navigationView;
     private boolean lvl;
     private int level;
+    private boolean showLogin = true;
+    
+    private TextView userName;
     
     private GoogleApiClient mGoogleApiClient;
     private static int RC_SIGN_IN = 9001;
@@ -82,6 +89,8 @@ public class MainActivity extends AppCompatActivity implements
         navigationView.setNavigationItemSelectedListener(this);
         lvl = navigationView.getMenu().findItem(R.id.nav_lessons) == null;
         
+        userName = (TextView) navigationView.getHeaderView(0).findViewById(R.id.user_name);
+        
         new LoadDataTask(this, new OnJSONResponseListener() {
             @Override
             public void onSuccess(JSONObject response) {
@@ -120,8 +129,10 @@ public class MainActivity extends AppCompatActivity implements
     
     @Override
     public void onConnected(Bundle connectionHint) {
-        // The player is signed in. Hide the sign-in button and allow the
-        // player to proceed.
+        userName.setText(Games.Players.getCurrentPlayer(mGoogleApiClient).getDisplayName());
+        lvl = !lvl;
+        showLogin = false;
+        this.toggleDrawerMenu(null);
     }
     
     @Override
@@ -171,18 +182,6 @@ public class MainActivity extends AppCompatActivity implements
             }
         }
     }
-    
-    // Call when the sign-in button is clicked
-    private void signInClicked() {
-        mSignInClicked = true;
-        mGoogleApiClient.connect();
-    }
-
-    // Call when the sign-out button is clicked
-    private void signOutclicked() {
-        mSignInClicked = false;
-        Games.signOut(mGoogleApiClient);
-    }
 
     @Override
     public void onBackPressed() {
@@ -226,8 +225,6 @@ public class MainActivity extends AppCompatActivity implements
                 break;
             }
         }
-        lvl = true;
-        toggleDrawerMenu(null);
     }
 
     @Override
@@ -239,14 +236,21 @@ public class MainActivity extends AppCompatActivity implements
         if(lvl){
             
             switch(id){
-                case R.id.nav_log_in_out:
+                case R.id.nav_log_in:
                     mSignInClicked = true;
                     mGoogleApiClient.connect();
+                    break;
+                case R.id.nav_log_out:
+                    mSignInClicked = false;
+                    Games.signOut(mGoogleApiClient);
+                    userName.setText(R.string.not_logged_in);
+                    showLogin = true;
                     break;
                 default:
                     setLevel(id);
                     break;
             }
+            toggleDrawerMenu(null);
             
         } else {
 
@@ -275,17 +279,18 @@ public class MainActivity extends AppCompatActivity implements
         MenuItem item = navigationView.getMenu().findItem(R.id.nav_lessons);
         lvl = !lvl;
         if(lvl){
+            Menu m = navigationView.getMenu();
             if(item != null){
                 navigationView.getMenu().clear();
                 navigationView.inflateMenu(R.menu.drawer_select_level);
-                Menu m = navigationView.getMenu();
                 int i = 5;
                 for(Level l : levels) m.add(R.id.nav_levels, l.getId(), i++, l.getName());
             } else {
-                Menu m = navigationView.getMenu();
                 int i = 5;
                 for(Level l : levels) if(m.findItem(l.getId()) == null) m.add(R.id.nav_levels, l.getId(), i++, l.getName());
             }
+            m.findItem(R.id.nav_log_in).setVisible(showLogin);
+            m.findItem(R.id.nav_log_out).setVisible(!showLogin);
         } else {
             if(item == null){
                 navigationView.getMenu().clear();
@@ -295,6 +300,10 @@ public class MainActivity extends AppCompatActivity implements
         
         ImageButton ib = (ImageButton) navigationView.getHeaderView(0).findViewById(R.id.toggle_levels);
         ib.setImageResource(lvl ? R.drawable.ic_collapse : R.drawable.ic_expand);
+    }
+    
+    public boolean isLogged(){
+        return mGoogleApiClient != null && mGoogleApiClient.isConnected();
     }
     
 }
