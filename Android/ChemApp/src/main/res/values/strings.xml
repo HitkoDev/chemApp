@@ -9,6 +9,8 @@
     
     <string name="no_network">Internetna povezava ni na voljo</string>
     <string name="dialog_retry">Poskusi znova</string>
+    <string name="signin_failure">Napaka ob prijavi</string>
+    <string name="signin_other_error">Napake ob prijavi</string>
     
     <string name="rest_base">https://amaranth.hitko.si/rest/</string>
 </resources>

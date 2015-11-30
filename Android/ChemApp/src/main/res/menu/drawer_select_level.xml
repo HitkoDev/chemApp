@@ -6,4 +6,9 @@
         android:checkableBehavior="single">
     </group>
     
+    <item
+        android:id="@+id/nav_log_in_out"
+        android:icon="@drawable/ic_play"
+        android:orderInCategory="100"
+        android:title="Prijava" />
 </menu>
