@@ -15,5 +15,6 @@ import com.squareup.okhttp.OkHttpClient;
 public class ChemApp extends Application {
     
     public static final OkHttpClient client = new OkHttpClient();
+    public static final String PREF_NAME = "ChemAppPreferences";
     
 }
