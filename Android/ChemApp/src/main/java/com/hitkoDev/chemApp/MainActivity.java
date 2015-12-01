@@ -22,11 +22,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import android.content.SharedPreferences;
+import android.widget.FrameLayout;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.games.Games;
 import com.google.example.games.basegameutils.BaseGameUtils;
+import com.hitkoDev.chemApp.fragment.SectionsFragment;
 
 /**
  *
@@ -35,12 +37,19 @@ import com.google.example.games.basegameutils.BaseGameUtils;
 public class MainActivity extends AppCompatActivity implements 
         NavigationView.OnNavigationItemSelectedListener,
         GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener {
+        GoogleApiClient.OnConnectionFailedListener,
+        SectionsFragment.onSelectedListener {
+    
+    private final static int LESSONS = 1;
+    private final static int EXERCISES = 2;
+    private final static int EXAM = 3;
     
     private ArrayList<Level> levels = new ArrayList();
     private NavigationView navigationView;
     private boolean lvl;
     private int level;
+    private int section;
+    private int action;
     
     private TextView userName;
     private SharedPreferences settings;
@@ -54,12 +63,17 @@ public class MainActivity extends AppCompatActivity implements
     private boolean mExplicitSignOut = false;
     private boolean mInSignInFlow = false;
     
+    private FrameLayout mainFrame;
+    private FrameLayout helperFrame;
+    
+    private SectionsFragment sectionsFragment;
+    
     @Override
     protected void onCreate(Bundle bundle) {
         super.onCreate(bundle);
         settings = getSharedPreferences(ChemApp.PREF_NAME, 0);
         prefEditor = settings.edit();
-        level = settings.getInt("level", 0);
+        level = settings.getInt("level", 1);
         mExplicitSignOut = !settings.getBoolean("autoLogin", true);
         
         // Create the Google Api Client with access to the Play Games services
@@ -78,6 +92,9 @@ public class MainActivity extends AppCompatActivity implements
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.setDrawerListener(toggle);
         toggle.syncState();
+        
+        mainFrame = (FrameLayout) findViewById(R.id.main_frame);
+        helperFrame = (FrameLayout) findViewById(R.id.helper_frame);
 
         navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
@@ -249,10 +266,23 @@ public class MainActivity extends AppCompatActivity implements
             switch (id) {
             // Handle the camera action
                 case R.id.nav_lessons:
+                    action = LESSONS;
+                    if(section > 0){
+                        showLessons();
+                    } else {
+                        showSections();
+                    }
                     break;
                 case R.id.nav_exercises:
+                    action = EXERCISES;
+                    if(section > 0){
+                        showExercises();
+                    } else {
+                        showSections();
+                    }
                     break;
                 case R.id.nav_exam:
+                    showExam();
                     break;
                 case R.id.nav_settings:
                     break;
@@ -265,6 +295,28 @@ public class MainActivity extends AppCompatActivity implements
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+    
+    private void showSections(){
+        
+        if(sectionsFragment == null){
+            sectionsFragment = new SectionsFragment();
+            getSupportFragmentManager().beginTransaction().add(helperFrame == null ? R.id.main_frame : R.id.helper_frame, sectionsFragment).commit();
+            if(helperFrame != null) helperFrame.setVisibility(View.VISIBLE);
+        }
+        
+    }
+    
+    private void showLessons(){
+        
+    }
+
+    private void showExercises() {
+        
+    }
+
+    private void showExam() {
+        
     }
     
     public void updateDrawerMenu(View v){
@@ -297,6 +349,21 @@ public class MainActivity extends AppCompatActivity implements
     
     public boolean isLogged(){
         return mGoogleApiClient != null && mGoogleApiClient.isConnected();
+    }
+
+    @Override
+    public void onSectionSelected(int s) {
+        section = s;
+        prefEditor.putInt("section", section);
+        prefEditor.commit();
+        switch(action){
+            case LESSONS:
+                showLessons();
+                break;
+            case EXERCISES:
+                showExercises();
+                break;
+        }
     }
     
 }
