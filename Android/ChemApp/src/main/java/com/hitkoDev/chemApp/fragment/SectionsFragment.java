@@ -27,6 +27,7 @@ import com.hitkoDev.chemApp.data.Section;
 import com.hitkoDev.chemApp.rest.LoadDataTask;
 import com.hitkoDev.chemApp.rest.OnJSONResponseListener;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.logging.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -98,6 +99,8 @@ public class SectionsFragment extends Fragment {
         }).executeCached("level", settings.getInt("level", 0)+"");
         return v;
     }
+    
+    private HashMap<Integer, Boolean> selected = new HashMap();
         
     public class ViewHolder extends RecyclerView.ViewHolder {
         // each data item is just a string in this case
@@ -107,12 +110,17 @@ public class SectionsFragment extends Fragment {
         public ImageView topBorder;
         public ImageView bottomBorder;
         public CheckBox bookmark;
+        public CheckBox dropdown;
         public LinearLayout subsections;
-        public ArrayList<ViewHolder> sectionHolders = new ArrayList();
         public int id = 0;
+        public int index = 0;
+        public RecyclerView.Adapter adapter;
+        public boolean binding = false;
+        public ArrayList<ViewHolder> subsectionHolders = new ArrayList();
         
-        public ViewHolder(View v) {
+        public ViewHolder(View v, RecyclerView.Adapter a) {
             super(v);
+            adapter = a;
             view = (LinearLayout) v;
             name = (TextView) v.findViewById(R.id.section_name);
             desc = (TextView) v.findViewById(R.id.section_desc);
@@ -125,8 +133,21 @@ public class SectionsFragment extends Fragment {
                 
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    prefEditor.putBoolean(ChemApp.PREF_SECTION_PR + id, isChecked);
-                    prefEditor.commit();
+                    if(!binding){
+                        prefEditor.putBoolean(ChemApp.PREF_SECTION_PR + id, isChecked);
+                        prefEditor.commit();
+                    }
+                }
+                
+            });
+            
+            dropdown = (CheckBox) v.findViewById(R.id.section_expand);
+            dropdown.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+                
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    selected.put(id, isChecked);
+                    if(!binding) adapter.notifyItemChanged(index);
                 }
                 
             });
@@ -142,35 +163,51 @@ public class SectionsFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(ViewHolder vh, int i) {
+            vh.binding = true;
             Section s = sections.get(i);
+            vh.index = i;
             vh.name.setText(s.getName());
             vh.desc.setText(s.getDescription());
             vh.desc.setVisibility(s.getDescription().isEmpty() ? View.GONE : View.VISIBLE);
             vh.bottomBorder.setVisibility(i == getItemCount() - 1 ? View.GONE : View.VISIBLE);
             vh.id = s.getId();
             vh.bookmark.setChecked(settings.getBoolean(ChemApp.PREF_SECTION_PR + vh.id, false));
+            
             if(s.hasChildren()) {
-                ArrayList<Section> sub = s.getChildren();
-                int j;
-                for(int k = vh.sectionHolders.size() - 1; k >= sub.size(); k--){
-                    ViewHolder vhi = vh.sectionHolders.remove(k);
-                    vh.subsections.removeView(vhi.view);
+                vh.bookmark.setVisibility(View.GONE);
+                vh.dropdown.setVisibility(View.VISIBLE);
+                boolean b = selected.containsKey(s.getId()) && selected.get(s.getId());
+                vh.dropdown.setChecked(b);
+                if(b) {
+                    for(int j = s.getChildren().size(); j < vh.subsectionHolders.size(); j++) vh.subsectionHolders.get(j).view.setVisibility(View.GONE);
+                    int j = 0;
+                    for(Section sub : s.getChildren()){
+                        if(j < vh.subsectionHolders.size()){
+                            onBindSubViewHolder(vh.subsectionHolders.get(j), sub);
+                            vh.subsectionHolders.get(j).view.setVisibility(View.VISIBLE);
+                        } else {
+                            View v = LayoutInflater.from(vh.subsections.getContext()).inflate(R.layout.section_card, vh.subsections, false);
+                            vh.subsections.addView(v);
+                            ViewHolder newVh = new ViewHolder(v, this);
+                            vh.subsectionHolders.add(newVh);
+                            onBindSubViewHolder(newVh, sub);
+                        }
+                        j++;
+                    }
+                    vh.subsections.setVisibility(View.VISIBLE);
+                } else {
+                    vh.subsections.setVisibility(View.GONE);
                 }
-                for(j = 0; j < sub.size(); j++){
-                    View v = LayoutInflater.from(vh.subsections.getContext()).inflate(R.layout.section_card, vh.subsections, false);
-                    vh.subsections.addView(v);
-                    ViewHolder newVh = new ViewHolder(v);
-                    onBindSubViewHolder(newVh, sub.get(j));
-                }
-                vh.subsections.requestLayout();
-                vh.subsections.invalidate();
-                System.out.println(vh.subsections.getChildCount());
             } else {
-                vh.subsections.removeAllViews();
+                vh.bookmark.setVisibility(View.VISIBLE);
+                vh.subsections.setVisibility(View.GONE);
+                vh.dropdown.setVisibility(View.GONE);
             }
+            vh.binding = false;
         }
 
         public void onBindSubViewHolder(ViewHolder vh, Section s) {
+            vh.binding = true;
             vh.name.setText(s.getName());
             vh.desc.setText(s.getDescription());
             vh.desc.setVisibility(s.getDescription().isEmpty() ? View.GONE : View.VISIBLE);
@@ -178,13 +215,14 @@ public class SectionsFragment extends Fragment {
             vh.topBorder.setVisibility(View.VISIBLE);
             vh.bookmark.setChecked(settings.getBoolean(ChemApp.PREF_SECTION_PR + vh.id, false));
             if(vh.subsections.getChildCount() > 0) vh.subsections.removeAllViews();
+            vh.binding = false;
         }
 
         @Override
         public ViewHolder onCreateViewHolder(ViewGroup vg, int i) {
             View v = LayoutInflater.from(vg.getContext()).inflate(R.layout.section_card, vg, false);
             
-            ViewHolder vh = new ViewHolder(v);
+            ViewHolder vh = new ViewHolder(v, this);
             return vh;
         }
     }

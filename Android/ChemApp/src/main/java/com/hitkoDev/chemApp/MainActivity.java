@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity implements
         settings = getSharedPreferences(ChemApp.PREF_NAME, 0);
         prefEditor = settings.edit();
         level = settings.getInt("level", 1);
-        mExplicitSignOut = !settings.getBoolean("autoLogin", true);
+        mExplicitSignOut = !settings.getBoolean("autoLogin", false);
         
         // Create the Google Api Client with access to the Play Games services
         mGoogleApiClient = new GoogleApiClient.Builder(this)
