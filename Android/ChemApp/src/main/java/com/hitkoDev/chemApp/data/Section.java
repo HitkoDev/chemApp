@@ -40,8 +40,27 @@ public class Section {
         parent = p;
     }
 
+    public int getId() {
+        return id;
+    }
+
     public String getName() {
         return name;
     }
+
+    public String getDescription() {
+        return desc;
+    }
+
+    public Section getParent() {
+        return parent;
+    }
+
+    public ArrayList<Section> getChildren() {
+        return children;
+    }
     
+    public boolean hasChildren() {
+        return children != null && !children.isEmpty();
+    }
 }

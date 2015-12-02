@@ -14,6 +14,11 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import com.hitkoDev.chemApp.ChemApp;
 import com.hitkoDev.chemApp.MainActivity;
@@ -32,6 +37,10 @@ import org.json.JSONObject;
  * @author hitno
  */
 public class SectionsFragment extends Fragment {
+
+    private SharedPreferences settings;
+    private SharedPreferences.Editor prefEditor;
+    private LinearLayout.LayoutParams linearParams;
     
     public interface onSelectedListener {
         public void onSectionSelected(int section);
@@ -61,7 +70,8 @@ public class SectionsFragment extends Fragment {
         recyclerView.setLayoutManager(layoutManager);
         adapter = new SectionAdapter();
         
-        SharedPreferences settings = getContext().getSharedPreferences(ChemApp.PREF_NAME, 0);
+        settings = getContext().getSharedPreferences(ChemApp.PREF_NAME, 0);
+        prefEditor = settings.edit();
         
         new LoadDataTask(getContext(), new OnJSONResponseListener() {
             @Override
@@ -89,12 +99,37 @@ public class SectionsFragment extends Fragment {
         return v;
     }
         
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    public class ViewHolder extends RecyclerView.ViewHolder {
         // each data item is just a string in this case
-        public TextView mTextView;
-        public ViewHolder(TextView v) {
+        public TextView name;
+        public TextView desc;
+        public LinearLayout view;
+        public ImageView topBorder;
+        public ImageView bottomBorder;
+        public CheckBox bookmark;
+        public LinearLayout subsections;
+        public ArrayList<ViewHolder> sectionHolders = new ArrayList();
+        public int id = 0;
+        
+        public ViewHolder(View v) {
             super(v);
-            mTextView = v;
+            view = (LinearLayout) v;
+            name = (TextView) v.findViewById(R.id.section_name);
+            desc = (TextView) v.findViewById(R.id.section_desc);
+            topBorder = (ImageView) v.findViewById(R.id.top_line);
+            bottomBorder = (ImageView) v.findViewById(R.id.bottom_line);
+            subsections = (LinearLayout) v.findViewById(R.id.subsections);
+            
+            bookmark = (CheckBox) v.findViewById(R.id.section_bookmark);
+            bookmark.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+                
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    prefEditor.putBoolean(ChemApp.PREF_SECTION_PR + id, isChecked);
+                    prefEditor.commit();
+                }
+                
+            });
         }
     }
     
@@ -107,12 +142,47 @@ public class SectionsFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(ViewHolder vh, int i) {
-            vh.mTextView.setText(sections.get(i).getName());
+            Section s = sections.get(i);
+            vh.name.setText(s.getName());
+            vh.desc.setText(s.getDescription());
+            vh.desc.setVisibility(s.getDescription().isEmpty() ? View.GONE : View.VISIBLE);
+            vh.bottomBorder.setVisibility(i == getItemCount() - 1 ? View.GONE : View.VISIBLE);
+            vh.id = s.getId();
+            vh.bookmark.setChecked(settings.getBoolean(ChemApp.PREF_SECTION_PR + vh.id, false));
+            if(s.hasChildren()) {
+                ArrayList<Section> sub = s.getChildren();
+                int j;
+                for(int k = vh.sectionHolders.size() - 1; k >= sub.size(); k--){
+                    ViewHolder vhi = vh.sectionHolders.remove(k);
+                    vh.subsections.removeView(vhi.view);
+                }
+                for(j = 0; j < sub.size(); j++){
+                    View v = LayoutInflater.from(vh.subsections.getContext()).inflate(R.layout.section_card, vh.subsections, false);
+                    vh.subsections.addView(v);
+                    ViewHolder newVh = new ViewHolder(v);
+                    onBindSubViewHolder(newVh, sub.get(j));
+                }
+                vh.subsections.requestLayout();
+                vh.subsections.invalidate();
+                System.out.println(vh.subsections.getChildCount());
+            } else {
+                vh.subsections.removeAllViews();
+            }
+        }
+
+        public void onBindSubViewHolder(ViewHolder vh, Section s) {
+            vh.name.setText(s.getName());
+            vh.desc.setText(s.getDescription());
+            vh.desc.setVisibility(s.getDescription().isEmpty() ? View.GONE : View.VISIBLE);
+            vh.id = s.getId();
+            vh.topBorder.setVisibility(View.VISIBLE);
+            vh.bookmark.setChecked(settings.getBoolean(ChemApp.PREF_SECTION_PR + vh.id, false));
+            if(vh.subsections.getChildCount() > 0) vh.subsections.removeAllViews();
         }
 
         @Override
         public ViewHolder onCreateViewHolder(ViewGroup vg, int i) {
-            TextView v = (TextView) LayoutInflater.from(vg.getContext()).inflate(R.layout.section_card, vg, false);
+            View v = LayoutInflater.from(vg.getContext()).inflate(R.layout.section_card, vg, false);
             
             ViewHolder vh = new ViewHolder(v);
             return vh;
