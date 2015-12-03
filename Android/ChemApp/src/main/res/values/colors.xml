@@ -7,4 +7,19 @@
     <color name="colorAccentDark">#FF2248A8</color>
     <color name="playGames">#FFB2CB39</color>
     <color name="white_opaque">#FFFFFFFF</color>
+    
+    <array name="letter_tile_colors">
+        <item>#FFef6c00</item>
+        <item>#FF9c27b0</item>
+        <item>#FF039be5</item>
+        <item>#FF0f9d58</item>
+        <item>#FF757575</item>
+        <item>#FF689f38</item>
+        <item>#FF009688</item>
+        <item>#FFdb4437</item>
+        <item>#FF607D8B</item>
+        <item>#FF3F51B5</item>
+    </array>
+    <color name="letter_tile_default_color">#f48fb1</color>
+    <color name="letter_tile_font_color">#FFFFFFFF</color>
 </resources>

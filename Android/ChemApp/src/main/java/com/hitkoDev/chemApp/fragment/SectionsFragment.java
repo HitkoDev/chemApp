@@ -7,6 +7,8 @@ package com.hitkoDev.chemApp.fragment;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
@@ -26,6 +28,8 @@ import com.hitkoDev.chemApp.R;
 import com.hitkoDev.chemApp.data.Section;
 import com.hitkoDev.chemApp.rest.LoadDataTask;
 import com.hitkoDev.chemApp.rest.OnJSONResponseListener;
+import com.hitkoDev.chemApp.tiles.ImageCanvas.Dimensions;
+import com.hitkoDev.chemApp.tiles.LetterTileProvider;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.logging.Logger;
@@ -97,16 +101,20 @@ public class SectionsFragment extends Fragment {
                 System.out.println(response);
             }
         }).executeCached("level", settings.getInt("level", 0)+"");
+        int d = getResources().getDimensionPixelSize(R.dimen.letter_tile_size);
+        tileDimensions = new Dimensions(d, d, 1, getResources().getDimensionPixelSize(R.dimen.tile_letter_font_size_small));
         return v;
     }
     
     private HashMap<Integer, Boolean> selected = new HashMap();
+    private Dimensions tileDimensions;
         
     public class ViewHolder extends RecyclerView.ViewHolder {
         // each data item is just a string in this case
         public TextView name;
         public TextView desc;
         public LinearLayout view;
+        public ImageView icon;
         public ImageView topBorder;
         public ImageView bottomBorder;
         public CheckBox bookmark;
@@ -117,6 +125,7 @@ public class SectionsFragment extends Fragment {
         public RecyclerView.Adapter adapter;
         public boolean binding = false;
         public ArrayList<ViewHolder> subsectionHolders = new ArrayList();
+        public LetterTileProvider tileProvider = new LetterTileProvider(getResources());
         
         public ViewHolder(View v, RecyclerView.Adapter a) {
             super(v);
@@ -124,6 +133,7 @@ public class SectionsFragment extends Fragment {
             view = (LinearLayout) v;
             name = (TextView) v.findViewById(R.id.section_name);
             desc = (TextView) v.findViewById(R.id.section_desc);
+            icon = (ImageView) v.findViewById(R.id.tile_icon);
             topBorder = (ImageView) v.findViewById(R.id.top_line);
             bottomBorder = (ImageView) v.findViewById(R.id.bottom_line);
             subsections = (LinearLayout) v.findViewById(R.id.subsections);
@@ -172,6 +182,8 @@ public class SectionsFragment extends Fragment {
             vh.bottomBorder.setVisibility(i == getItemCount() - 1 ? View.GONE : View.VISIBLE);
             vh.id = s.getId();
             vh.bookmark.setChecked(settings.getBoolean(ChemApp.PREF_SECTION_PR + vh.id, false));
+            Bitmap letterTile = vh.tileProvider.getLetterTile(tileDimensions, s.getName(), s.getId() + "");
+            vh.icon.setImageBitmap(letterTile);
             
             if(s.hasChildren()) {
                 vh.bookmark.setVisibility(View.GONE);
@@ -214,6 +226,8 @@ public class SectionsFragment extends Fragment {
             vh.id = s.getId();
             vh.topBorder.setVisibility(View.VISIBLE);
             vh.bookmark.setChecked(settings.getBoolean(ChemApp.PREF_SECTION_PR + vh.id, false));
+            Bitmap letterTile = vh.tileProvider.getLetterTile(tileDimensions, s.getName(), s.getId() + "");
+            vh.icon.setImageBitmap(letterTile);
             if(vh.subsections.getChildCount() > 0) vh.subsections.removeAllViews();
             vh.binding = false;
         }
