@@ -17,11 +17,12 @@ package com.hitkoDev.chemApp.tiles;
 
 import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.graphics.Paint.Align;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.text.TextPaint;
 import android.text.TextUtils;
 import com.hitkoDev.chemApp.R;
@@ -35,9 +36,8 @@ import com.hitkoDev.chemApp.tiles.ImageCanvas.Dimensions;
  * bitmap with the default contact avatar.
  */
 public class LetterTileProvider {
-    private final Bitmap mDefaultBitmap;
+    private final Drawable mDefaultDrawable;
     private final Bitmap[] mBitmapBackgroundCache;
-    private final Bitmap[] mDefaultBitmapCache;
     private final Typeface mSansSerifLight;
     private final Rect mBounds;
     private final int mTileLetterFontSize;
@@ -48,12 +48,13 @@ public class LetterTileProvider {
     private final char[] mFirstChar = new char[1];
     private static final int POSSIBLE_BITMAP_SIZES = 3;
     private final ColorPicker mTileColorPicker;
+    public boolean noCache = false;
     public LetterTileProvider(Resources res) {
         this(res, new ColorPicker.PaletteColorPicker(res));
     }
     public LetterTileProvider(Resources res, ColorPicker colorPicker) {
-        mTileLetterFontSize = res.getDimensionPixelSize(R.dimen.tile_letter_font_size_small);
-        mTileLetterFontSizeSmall = res.getDimensionPixelSize(R.dimen.tile_letter_font_size_tiny);
+        mTileLetterFontSize = res.getDimensionPixelSize(R.dimen.tile_letter_font_size_medium);
+        mTileLetterFontSizeSmall = res.getDimensionPixelSize(R.dimen.tile_letter_font_size_small);
         mTileFontColor = res.getColor(R.color.letter_tile_font_color);
         mSansSerifLight = Typeface.create("sans-serif-light", Typeface.NORMAL);
         mBounds = new Rect();
@@ -62,8 +63,7 @@ public class LetterTileProvider {
         mPaint.setTextAlign(Align.CENTER);
         mPaint.setAntiAlias(true);
         mBitmapBackgroundCache = new Bitmap[POSSIBLE_BITMAP_SIZES];
-        mDefaultBitmap = BitmapFactory.decodeResource(res, R.drawable.ic_tile_generic);
-        mDefaultBitmapCache = new Bitmap[POSSIBLE_BITMAP_SIZES];
+        mDefaultDrawable = res.getDrawable(R.drawable.ic_tile_generic);
         mTileColorPicker = colorPicker;
     }
     public Bitmap getLetterTile(final Dimensions dimensions, final String displayName,
@@ -71,13 +71,16 @@ public class LetterTileProvider {
         final String display = !TextUtils.isEmpty(displayName) ? displayName : address;
         final char firstChar = display.charAt(0);
         // get an empty bitmap
-        final Bitmap bitmap = getBitmap(dimensions, false /* getDefault */);
+        final Bitmap bitmap = getBitmap(dimensions);
         if (bitmap == null) {
             return null;
         }
         final Canvas c = mCanvas;
         c.setBitmap(bitmap);
-        c.drawColor(mTileColorPicker.pickColor(address));
+        Paint p = new Paint();
+        p.setColor(mTileColorPicker.pickColor(address));
+        p.setAntiAlias(true);
+        c.drawOval(0, 0, dimensions.width, dimensions.height, p);
         // If its a valid English alphabet letter,
         // draw the letter on top of the color
         if (isEnglishLetterOrDigit(firstChar)) {
@@ -88,7 +91,8 @@ public class LetterTileProvider {
             c.drawText(mFirstChar, 0, 1, 0 + dimensions.width / 2,
                     0 + dimensions.height / 2 + (mBounds.bottom - mBounds.top) / 2, mPaint);
         } else { // draw the generic icon on top
-            c.drawBitmap(getBitmap(dimensions, true /* getDefault */), 0, 0, null);
+            mDefaultDrawable.setBounds(0, 0, dimensions.width, dimensions.height);
+            mDefaultDrawable.draw(c);
         }
         return bitmap;
     }
@@ -97,9 +101,12 @@ public class LetterTileProvider {
                 || ('a' <= c && c <= 'z')
                 || ('0' <= c && c <= '9');
     }
-    private Bitmap getBitmap(final Dimensions d, boolean getDefault) {
+    private Bitmap getBitmap(final Dimensions d) {
         if (d.width <= 0 || d.height <= 0) {
             return null;
+        }
+        if(noCache){
+            return Bitmap.createBitmap(d.width, d.height, Bitmap.Config.ARGB_8888);
         }
         final int pos;
         float scale = d.scale;
@@ -110,18 +117,13 @@ public class LetterTileProvider {
         } else {
             pos = 2;
         }
-        final Bitmap[] cache = (getDefault) ? mDefaultBitmapCache : mBitmapBackgroundCache;
-        Bitmap bitmap = cache[pos];
+        Bitmap bitmap = mBitmapBackgroundCache[pos];
         // ensure bitmap is suitable for the desired w/h
         // (two-pane uses two different sets of dimensions depending on pane width)
         if (bitmap == null || bitmap.getWidth() != d.width || bitmap.getHeight() != d.height) {
             // create and place the bitmap
-            if (getDefault) {
-                bitmap = BitmapUtil.centerCrop(mDefaultBitmap, d.width, d.height);
-            } else {
-                bitmap = Bitmap.createBitmap(d.width, d.height, Bitmap.Config.ARGB_8888);
-            }
-            cache[pos] = bitmap;
+            bitmap = Bitmap.createBitmap(d.width, d.height, Bitmap.Config.ARGB_8888);
+            mBitmapBackgroundCache[pos] = bitmap;
         }
         return bitmap;
     }

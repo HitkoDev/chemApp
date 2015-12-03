@@ -5,18 +5,12 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
     
-    <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/top_line"
-        android:visibility="gone"
-        android:src="@drawable/horizontal_line" />
-    
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:background="@drawable/default_ripple"
+        android:id="@+id/section_container"
         android:clickable="true"
         android:paddingLeft="@dimen/activity_horizontal_margin"
         android:paddingRight="@dimen/activity_horizontal_margin"
@@ -76,22 +70,5 @@
         </LinearLayout>
     
     </LinearLayout>
-    
-    <LinearLayout
-        android:id="@+id/subsections"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:visibility="gone"
-        android:paddingLeft="@dimen/activity_horizontal_margin">
-
-    </LinearLayout>
-    
-    <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/bottom_line"
-        android:visibility="gone"
-        android:src="@drawable/horizontal_line" />
     
 </LinearLayout>

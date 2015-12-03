@@ -7,7 +7,6 @@ package com.hitkoDev.chemApp.fragment;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -32,6 +31,7 @@ import com.hitkoDev.chemApp.tiles.ImageCanvas.Dimensions;
 import com.hitkoDev.chemApp.tiles.LetterTileProvider;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map.Entry;
 import java.util.logging.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -45,7 +45,8 @@ public class SectionsFragment extends Fragment {
 
     private SharedPreferences settings;
     private SharedPreferences.Editor prefEditor;
-    private LinearLayout.LayoutParams linearParams;
+    private static final String EXPANDED_KEYS = "chemApp.SectionsFragment.expand_keys";
+    private static final String EXPANDED_VALUES = "chemApp.SectionsFragment.expand_values";
     
     public interface onSelectedListener {
         public void onSectionSelected(int section);
@@ -78,6 +79,16 @@ public class SectionsFragment extends Fragment {
         settings = getContext().getSharedPreferences(ChemApp.PREF_NAME, 0);
         prefEditor = settings.edit();
         
+        int d = getResources().getDimensionPixelSize(R.dimen.letter_tile_size);
+        tileDimensions = new Dimensions(d, d, 1, getResources().getDimensionPixelSize(R.dimen.tile_letter_font_size_medium));
+        d = getResources().getDimensionPixelSize(R.dimen.letter_sub_tile_size);
+        subTileDimensions = new Dimensions(d, d, 1, getResources().getDimensionPixelSize(R.dimen.tile_letter_font_size_small));
+        paddingH = getResources().getDimensionPixelSize(R.dimen.activity_horizontal_margin);
+        paddingV = getResources().getDimensionPixelSize(R.dimen.activity_vertical_margin);
+        offsetPadding = getResources().getDimensionPixelSize(R.dimen.list_item_indent);
+        tileProvider = new LetterTileProvider(getResources());
+        tileProvider.noCache = true;
+        
         new LoadDataTask(getContext(), new OnJSONResponseListener() {
             @Override
             public void onSuccess(JSONObject response) {
@@ -85,7 +96,13 @@ public class SectionsFragment extends Fragment {
                     JSONArray l = response.getJSONObject("object").getJSONArray("sections");
                     for(int i = 0; i < l.length(); i++){
                         try {
-                            sections.add(new Section(l.getJSONObject(i)));
+                            Section s = new Section(l.getJSONObject(i));
+                            s.setTile(new BitmapDrawable(getContext().getResources(), tileProvider.getLetterTile(tileDimensions, s.getName(), s.getId() + "")));
+                            sections.add(s);
+                            if(s.hasChildren()) {
+                                for(Section sub : s.getChildren()) sub.setTile(new BitmapDrawable(getContext().getResources(), tileProvider.getLetterTile(subTileDimensions, sub.getName(), sub.getId() + "")));
+                                sections.addAll(s.getChildren());
+                            }
                         } catch (JSONException ex) {
                             Logger.getLogger(MainActivity.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
                         }
@@ -101,42 +118,37 @@ public class SectionsFragment extends Fragment {
                 System.out.println(response);
             }
         }).executeCached("level", settings.getInt("level", 0)+"");
-        int d = getResources().getDimensionPixelSize(R.dimen.letter_tile_size);
-        tileDimensions = new Dimensions(d, d, 1, getResources().getDimensionPixelSize(R.dimen.tile_letter_font_size_small));
         return v;
     }
     
-    private HashMap<Integer, Boolean> selected = new HashMap();
+    private HashMap<Integer, Boolean> expanded = new HashMap();
     private Dimensions tileDimensions;
+    private Dimensions subTileDimensions;
+    private int paddingV;
+    private int paddingH;
+    private int offsetPadding;
+    private LetterTileProvider tileProvider;
         
     public class ViewHolder extends RecyclerView.ViewHolder {
         // each data item is just a string in this case
         public TextView name;
         public TextView desc;
-        public LinearLayout view;
         public ImageView icon;
-        public ImageView topBorder;
-        public ImageView bottomBorder;
         public CheckBox bookmark;
         public CheckBox dropdown;
-        public LinearLayout subsections;
+        public LinearLayout container;
         public int id = 0;
         public int index = 0;
         public RecyclerView.Adapter adapter;
         public boolean binding = false;
-        public ArrayList<ViewHolder> subsectionHolders = new ArrayList();
-        public LetterTileProvider tileProvider = new LetterTileProvider(getResources());
         
         public ViewHolder(View v, RecyclerView.Adapter a) {
             super(v);
             adapter = a;
-            view = (LinearLayout) v;
+            container = (LinearLayout) v.findViewById(R.id.section_container);
             name = (TextView) v.findViewById(R.id.section_name);
             desc = (TextView) v.findViewById(R.id.section_desc);
             icon = (ImageView) v.findViewById(R.id.tile_icon);
-            topBorder = (ImageView) v.findViewById(R.id.top_line);
-            bottomBorder = (ImageView) v.findViewById(R.id.bottom_line);
-            subsections = (LinearLayout) v.findViewById(R.id.subsections);
             
             bookmark = (CheckBox) v.findViewById(R.id.section_bookmark);
             bookmark.setOnCheckedChangeListener(new OnCheckedChangeListener() {
@@ -156,8 +168,8 @@ public class SectionsFragment extends Fragment {
                 
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    selected.put(id, isChecked);
-                    if(!binding) adapter.notifyItemChanged(index);
+                    expanded.put(id, isChecked);
+                    if(!binding) adapter.notifyItemRangeChanged(index + 1, sections.get(index).getChildrenCount());
                 }
                 
             });
@@ -175,69 +187,64 @@ public class SectionsFragment extends Fragment {
         public void onBindViewHolder(ViewHolder vh, int i) {
             vh.binding = true;
             Section s = sections.get(i);
-            vh.index = i;
-            vh.name.setText(s.getName());
-            vh.desc.setText(s.getDescription());
-            vh.desc.setVisibility(s.getDescription().isEmpty() ? View.GONE : View.VISIBLE);
-            vh.bottomBorder.setVisibility(i == getItemCount() - 1 ? View.GONE : View.VISIBLE);
-            vh.id = s.getId();
-            vh.bookmark.setChecked(settings.getBoolean(ChemApp.PREF_SECTION_PR + vh.id, false));
-            Bitmap letterTile = vh.tileProvider.getLetterTile(tileDimensions, s.getName(), s.getId() + "");
-            vh.icon.setImageBitmap(letterTile);
-            
-            if(s.hasChildren()) {
-                vh.bookmark.setVisibility(View.GONE);
-                vh.dropdown.setVisibility(View.VISIBLE);
-                boolean b = selected.containsKey(s.getId()) && selected.get(s.getId());
-                vh.dropdown.setChecked(b);
-                if(b) {
-                    for(int j = s.getChildren().size(); j < vh.subsectionHolders.size(); j++) vh.subsectionHolders.get(j).view.setVisibility(View.GONE);
-                    int j = 0;
-                    for(Section sub : s.getChildren()){
-                        if(j < vh.subsectionHolders.size()){
-                            onBindSubViewHolder(vh.subsectionHolders.get(j), sub);
-                            vh.subsectionHolders.get(j).view.setVisibility(View.VISIBLE);
-                        } else {
-                            View v = LayoutInflater.from(vh.subsections.getContext()).inflate(R.layout.section_card, vh.subsections, false);
-                            vh.subsections.addView(v);
-                            ViewHolder newVh = new ViewHolder(v, this);
-                            vh.subsectionHolders.add(newVh);
-                            onBindSubViewHolder(newVh, sub);
-                        }
-                        j++;
-                    }
-                    vh.subsections.setVisibility(View.VISIBLE);
-                } else {
-                    vh.subsections.setVisibility(View.GONE);
-                }
+            if(s.isChild() && !(expanded.containsKey(s.getParent().getId()) && expanded.get(s.getParent().getId()))){
+                vh.container.setVisibility(View.GONE);
             } else {
-                vh.bookmark.setVisibility(View.VISIBLE);
-                vh.subsections.setVisibility(View.GONE);
-                vh.dropdown.setVisibility(View.GONE);
-            }
-            vh.binding = false;
-        }
+                vh.index = i;
+                vh.name.setText(s.getName());
+                vh.desc.setText(s.getDescription());
+                vh.desc.setVisibility(s.getDescription().isEmpty() ? View.GONE : View.VISIBLE);
+                vh.id = s.getId();
+                
+                vh.container.setPadding(s.isChild() ? offsetPadding: paddingH, paddingV, paddingH, paddingV);
+                vh.icon.setPadding(0, 0, s.isChild() ? offsetPadding: paddingH, 0);
+                vh.icon.setImageDrawable(s.getTile());
 
-        public void onBindSubViewHolder(ViewHolder vh, Section s) {
-            vh.binding = true;
-            vh.name.setText(s.getName());
-            vh.desc.setText(s.getDescription());
-            vh.desc.setVisibility(s.getDescription().isEmpty() ? View.GONE : View.VISIBLE);
-            vh.id = s.getId();
-            vh.topBorder.setVisibility(View.VISIBLE);
-            vh.bookmark.setChecked(settings.getBoolean(ChemApp.PREF_SECTION_PR + vh.id, false));
-            Bitmap letterTile = vh.tileProvider.getLetterTile(tileDimensions, s.getName(), s.getId() + "");
-            vh.icon.setImageBitmap(letterTile);
-            if(vh.subsections.getChildCount() > 0) vh.subsections.removeAllViews();
+                if(s.isChild() || !s.hasChildren()){
+                    vh.bookmark.setVisibility(View.VISIBLE);
+                    vh.dropdown.setVisibility(View.GONE);
+                    vh.bookmark.setChecked(settings.getBoolean(ChemApp.PREF_SECTION_PR + vh.id, false));
+                } else {
+                    vh.bookmark.setVisibility(View.GONE);
+                    vh.dropdown.setVisibility(View.VISIBLE);
+                    vh.dropdown.setChecked(expanded.containsKey(s.getId()) && expanded.get(s.getId()));
+                }
+                vh.container.setVisibility(View.VISIBLE);
+            }
             vh.binding = false;
         }
 
         @Override
         public ViewHolder onCreateViewHolder(ViewGroup vg, int i) {
             View v = LayoutInflater.from(vg.getContext()).inflate(R.layout.section_card, vg, false);
-            
             ViewHolder vh = new ViewHolder(v, this);
             return vh;
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState); //To change body of generated methods, choose Tools | Templates.
+        int i = expanded.size();
+        int[] k = new int[i];
+        boolean[] v = new boolean[i];
+        i = 0;
+        for(Entry<Integer, Boolean> e : expanded.entrySet()){
+            k[i] = e.getKey();
+            v[i] = e.getValue();
+            i++;
+        }
+        outState.putIntArray(EXPANDED_KEYS, k);
+        outState.putBooleanArray(EXPANDED_VALUES, v);
+    }
+
+    @Override
+    public void onCreate(Bundle bundle) {
+        super.onCreate(bundle); //To change body of generated methods, choose Tools | Templates.
+        if(bundle != null){
+            int[] k = bundle.getIntArray(EXPANDED_KEYS);
+            boolean[] v = bundle.getBooleanArray(EXPANDED_VALUES);
+            if(k != null && v != null) for(int i = 0; i < k.length && i < v.length; i++) expanded.put(k[i], v[i]);
         }
     }
     

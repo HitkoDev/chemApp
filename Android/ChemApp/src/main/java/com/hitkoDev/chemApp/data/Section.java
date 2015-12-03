@@ -5,6 +5,7 @@
  */
 package com.hitkoDev.chemApp.data;
 
+import android.graphics.drawable.Drawable;
 import java.util.ArrayList;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -21,6 +22,7 @@ public class Section {
     private String desc;
     private Section parent;
     private ArrayList<Section> children;
+    private Drawable tile;
     
     public Section(JSONObject o) throws JSONException {
         if(o.has("id")) id = o.getInt("id");
@@ -33,6 +35,22 @@ public class Section {
                 children.add(new Section(sec.getJSONObject(i), this));
             }
         }
+    }
+    
+    public int getChildrenCount(){
+        return children == null ? 0 : children.size();
+    }
+    
+    public boolean isChild() {
+        return this.parent != null;
+    }
+
+    public void setTile(Drawable tile) {
+        this.tile = tile;
+    }
+
+    public Drawable getTile() {
+        return tile;
     }
     
     public Section(JSONObject o, Section p) throws JSONException {

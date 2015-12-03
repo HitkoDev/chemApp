@@ -9,16 +9,20 @@
     <color name="white_opaque">#FFFFFFFF</color>
     
     <array name="letter_tile_colors">
-        <item>#FFef6c00</item>
-        <item>#FF9c27b0</item>
-        <item>#FF039be5</item>
-        <item>#FF0f9d58</item>
-        <item>#FF757575</item>
-        <item>#FF689f38</item>
-        <item>#FF009688</item>
-        <item>#FFdb4437</item>
-        <item>#FF607D8B</item>
-        <item>#FF3F51B5</item>
+        <item>#ffdb4437</item>
+        <item>#ffe91e63</item>
+        <item>#ff9c27b0</item>
+        <item>#ff673ab7</item>
+        <item>#ff3f51b5</item>
+        <item>#ff4285f4</item>
+        <item>#ff039be5</item>
+        <item>#ff0097a7</item>
+        <item>#ff009688</item>
+        <item>#ff0f9d58</item>
+        <item>#ff689f38</item>
+        <item>#ffef6c00</item>
+        <item>#ffff5722</item>
+        <item>#ff757575</item>
     </array>
     <color name="letter_tile_default_color">#f48fb1</color>
     <color name="letter_tile_font_color">#FFFFFFFF</color>
