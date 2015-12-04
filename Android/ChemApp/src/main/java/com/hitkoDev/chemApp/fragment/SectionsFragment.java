@@ -92,7 +92,12 @@ public class SectionsFragment extends Fragment {
         tileProvider = new LetterTileProvider(getResources());
         tileProvider.noCache = true;
         
-        final int level = settings.getInt("level", 0);
+        loadLevel(settings.getInt("level", 0));
+        
+        return v;
+    }
+    
+    public void loadLevel(final int level){
         if(level > 0){
             if(level == loadedLevel){
                 recyclerView.setAdapter(adapter);
@@ -129,7 +134,6 @@ public class SectionsFragment extends Fragment {
                 }).executeCached("level", level+"");
             }
         }
-        return v;
     }
     
     private final HashMap<Integer, Boolean> expanded = new HashMap();

@@ -260,6 +260,7 @@ public class MainActivity extends AppCompatActivity implements
                     break;
                 default:
                     setLevel(id);
+                    if(sectionsFragment != null) sectionsFragment.loadLevel(id);
                     break;
             }
             updateDrawerMenu(null);
