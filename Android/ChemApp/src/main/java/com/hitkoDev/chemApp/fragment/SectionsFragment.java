@@ -14,6 +14,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -47,6 +48,7 @@ public class SectionsFragment extends Fragment {
     private SharedPreferences.Editor prefEditor;
     private static final String EXPANDED_KEYS = "chemApp.SectionsFragment.expand_keys";
     private static final String EXPANDED_VALUES = "chemApp.SectionsFragment.expand_values";
+    private int loadedLevel = 0;
     
     public interface onSelectedListener {
         public void onSectionSelected(int section);
@@ -56,7 +58,7 @@ public class SectionsFragment extends Fragment {
     private RecyclerView recyclerView;
     private RecyclerView.Adapter adapter;
     private RecyclerView.LayoutManager layoutManager;
-    private ArrayList<Section> sections = new ArrayList();
+    private final ArrayList<Section> sections = new ArrayList();
 
     @Override
     public void onAttach(Context activity) {
@@ -71,13 +73,14 @@ public class SectionsFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.sections_list, container, false);
+        
+        settings = getContext().getSharedPreferences(ChemApp.PREF_NAME, 0);
+        prefEditor = settings.edit();
+        
         recyclerView = (RecyclerView) v.findViewById(R.id.sections_recycler_view);
         layoutManager = new LinearLayoutManager(getContext());
         recyclerView.setLayoutManager(layoutManager);
         adapter = new SectionAdapter();
-        
-        settings = getContext().getSharedPreferences(ChemApp.PREF_NAME, 0);
-        prefEditor = settings.edit();
         
         int d = getResources().getDimensionPixelSize(R.dimen.letter_tile_size);
         tileDimensions = new Dimensions(d, d, 1, getResources().getDimensionPixelSize(R.dimen.tile_letter_font_size_medium));
@@ -89,39 +92,47 @@ public class SectionsFragment extends Fragment {
         tileProvider = new LetterTileProvider(getResources());
         tileProvider.noCache = true;
         
-        new LoadDataTask(getContext(), new OnJSONResponseListener() {
-            @Override
-            public void onSuccess(JSONObject response) {
-                try {
-                    JSONArray l = response.getJSONObject("object").getJSONArray("sections");
-                    for(int i = 0; i < l.length(); i++){
+        final int level = settings.getInt("level", 0);
+        if(level > 0){
+            if(level == loadedLevel){
+                recyclerView.setAdapter(adapter);
+            } else {
+                new LoadDataTask(getContext(), new OnJSONResponseListener() {
+                    @Override
+                    public void onSuccess(JSONObject response) {
                         try {
-                            Section s = new Section(l.getJSONObject(i));
-                            s.setTile(new BitmapDrawable(getContext().getResources(), tileProvider.getLetterTile(tileDimensions, s.getName(), s.getId() + "")));
-                            sections.add(s);
-                            if(s.hasChildren()) {
-                                for(Section sub : s.getChildren()) sub.setTile(new BitmapDrawable(getContext().getResources(), tileProvider.getLetterTile(subTileDimensions, sub.getName(), sub.getId() + "")));
-                                sections.addAll(s.getChildren());
+                            JSONArray l = response.getJSONObject("object").getJSONArray("sections");
+                            for(int i = 0; i < l.length(); i++){
+                                try {
+                                    Section s = new Section(l.getJSONObject(i));
+                                    s.setTile(new BitmapDrawable(getContext().getResources(), tileProvider.getLetterTile(tileDimensions, s.getName(), s.getId() + "")));
+                                    sections.add(s);
+                                    if(s.hasChildren()) {
+                                        for(Section sub : s.getChildren()) sub.setTile(new BitmapDrawable(getContext().getResources(), tileProvider.getLetterTile(subTileDimensions, sub.getName(), sub.getId() + "")));
+                                        sections.addAll(s.getChildren());
+                                    }
+                                } catch (JSONException ex) {
+                                    Logger.getLogger(MainActivity.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+                                }
                             }
                         } catch (JSONException ex) {
                             Logger.getLogger(MainActivity.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
                         }
+                        loadedLevel = level;
+                        recyclerView.setAdapter(adapter);
                     }
-                } catch (JSONException ex) {
-                    Logger.getLogger(MainActivity.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-                }
-                recyclerView.setAdapter(adapter);
-            }
 
-            @Override
-            public void onFail(String response) {
-                System.out.println(response);
+                    @Override
+                    public void onFail(String response) {
+                        System.out.println(response);
+                    }
+                }).executeCached("level", level+"");
             }
-        }).executeCached("level", settings.getInt("level", 0)+"");
+        }
         return v;
     }
     
-    private HashMap<Integer, Boolean> expanded = new HashMap();
+    private final HashMap<Integer, Boolean> expanded = new HashMap();
     private Dimensions tileDimensions;
     private Dimensions subTileDimensions;
     private int paddingV;
@@ -146,6 +157,12 @@ public class SectionsFragment extends Fragment {
             super(v);
             adapter = a;
             container = (LinearLayout) v.findViewById(R.id.section_container);
+            container.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    listener.onSectionSelected(id);
+                }
+            });
             name = (TextView) v.findViewById(R.id.section_name);
             desc = (TextView) v.findViewById(R.id.section_desc);
             icon = (ImageView) v.findViewById(R.id.tile_icon);

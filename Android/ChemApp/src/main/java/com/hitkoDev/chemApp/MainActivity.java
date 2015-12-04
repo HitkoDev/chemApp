@@ -28,6 +28,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.games.Games;
 import com.google.example.games.basegameutils.BaseGameUtils;
+import com.hitkoDev.chemApp.fragment.LessonsFragment;
 import com.hitkoDev.chemApp.fragment.SectionsFragment;
 
 /**
@@ -49,7 +50,7 @@ public class MainActivity extends AppCompatActivity implements
     private boolean lvl;
     private int level;
     private int section;
-    private int action;
+    private int action = -1;
     
     private TextView userName;
     private SharedPreferences settings;
@@ -67,6 +68,7 @@ public class MainActivity extends AppCompatActivity implements
     private FrameLayout helperFrame;
     
     private SectionsFragment sectionsFragment;
+    private LessonsFragment lessonsFragment;
     
     @Override
     protected void onCreate(Bundle bundle) {
@@ -74,6 +76,7 @@ public class MainActivity extends AppCompatActivity implements
         settings = getSharedPreferences(ChemApp.PREF_NAME, 0);
         prefEditor = settings.edit();
         level = settings.getInt("level", 1);
+        section = settings.getInt("section", 0);
         mExplicitSignOut = !settings.getBoolean("autoLogin", false);
         
         // Create the Google Api Client with access to the Play Games services
@@ -265,6 +268,9 @@ public class MainActivity extends AppCompatActivity implements
 
             switch (id) {
             // Handle the camera action
+                case R.id.nav_sections:
+                    showSections();
+                    break;
                 case R.id.nav_lessons:
                     action = LESSONS;
                     if(section > 0){
@@ -301,13 +307,18 @@ public class MainActivity extends AppCompatActivity implements
         
         if(sectionsFragment == null){
             sectionsFragment = new SectionsFragment();
-            getSupportFragmentManager().beginTransaction().add(helperFrame == null ? R.id.main_frame : R.id.helper_frame, sectionsFragment).commit();
-            if(helperFrame != null) helperFrame.setVisibility(View.VISIBLE);
         }
+        getSupportFragmentManager().beginTransaction().replace(helperFrame == null ? R.id.main_frame : R.id.helper_frame, sectionsFragment).commit();
+        if(helperFrame != null) helperFrame.setVisibility(View.VISIBLE);
         
     }
     
     private void showLessons(){
+        
+        if(lessonsFragment == null){
+            lessonsFragment = new LessonsFragment();
+        }
+        getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, lessonsFragment).commit();
         
     }
 
@@ -356,12 +367,17 @@ public class MainActivity extends AppCompatActivity implements
         section = s;
         prefEditor.putInt("section", section);
         prefEditor.commit();
+        MenuItem m;
         switch(action){
             case LESSONS:
                 showLessons();
+                m = navigationView.getMenu().findItem(R.id.nav_lessons);
+                if(m != null) m.setChecked(true);
                 break;
             case EXERCISES:
                 showExercises();
+                m = navigationView.getMenu().findItem(R.id.nav_exercises);
+                if(m != null) m.setChecked(true);
                 break;
         }
     }
