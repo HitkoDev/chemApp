@@ -21,9 +21,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.json.JSONException;
@@ -35,9 +32,9 @@ import org.json.JSONObject;
  */
 public class LoadDataTask extends AsyncTask<String, Void, String> {
     
-    private Context context;
-    private OnJSONResponseListener listener;
-    private File cache;
+    private final Context context;
+    private final OnJSONResponseListener listener;
+    private final File cache;
     private File file;
     
     public LoadDataTask(Context c, OnJSONResponseListener l) {
@@ -48,7 +45,7 @@ public class LoadDataTask extends AsyncTask<String, Void, String> {
     }
     
     public LoadDataTask executeCached(String... urls){
-        file = new File(cache, md5(buildURL(urls)) + ".json");
+        file = new File(cache, IOLib.md5(urls[0]) + ".png");
         System.out.println(file);
         if(checkNetwork()){
             return (LoadDataTask) execute(urls);
@@ -95,18 +92,6 @@ public class LoadDataTask extends AsyncTask<String, Void, String> {
         return networkInfo != null && networkInfo.isConnected();
     }
     
-    private String md5(String s){
-        try {
-            MessageDigest digester = MessageDigest.getInstance("MD5");
-            byte[] bytes = s.getBytes();
-            digester.update(bytes, 0, bytes.length);
-            return new BigInteger(1, digester.digest()).toString(16);
-        } catch (NoSuchAlgorithmException ex) {
-            Logger.getLogger(LoadDataTask.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return "";
-    }
-    
     private boolean checkFile(String name){
         File f = new File(cache, name);
         return f != null && f.exists();
@@ -117,7 +102,7 @@ public class LoadDataTask extends AsyncTask<String, Void, String> {
         @Override
         protected String doInBackground(String... urls) {
             String url = buildURL(urls);
-            String file = md5(url) + ".json";
+            String file = IOLib.md5(url) + ".json";
             if(checkFile(file)){
                 try(InputStream is = new FileInputStream(new File(cache, file))) {
                     return IOLib.readStream(is);

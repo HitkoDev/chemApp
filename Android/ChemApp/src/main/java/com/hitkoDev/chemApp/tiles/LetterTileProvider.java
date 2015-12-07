@@ -17,9 +17,12 @@ package com.hitkoDev.chemApp.tiles;
 
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Paint.Align;
+import android.graphics.PorterDuff.Mode;
+import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
@@ -65,6 +68,35 @@ public class LetterTileProvider {
         mBitmapBackgroundCache = new Bitmap[POSSIBLE_BITMAP_SIZES];
         mDefaultDrawable = res.getDrawable(R.drawable.ic_tile_generic);
         mTileColorPicker = colorPicker;
+    }
+    public Bitmap makeCircle(final Dimensions dimensions, Bitmap input) {
+        final Bitmap bitmap = getBitmap(dimensions);
+        if (bitmap == null) {
+            return null;
+        }
+        final Canvas c = mCanvas;
+        c.setBitmap(bitmap);
+
+        final Paint p = new Paint();
+        final Rect dst = new Rect(0, 0, dimensions.width, dimensions.height);
+        
+        double kw = ((double)input.getWidth()) / ((double)dimensions.width);
+        double kh = ((double)input.getHeight()) / ((double)dimensions.height);
+        
+        double nw = dimensions.width * Math.min(kw, kh);
+        double nh = dimensions.height * Math.min(kw, kh);
+        int l = (int) Math.round((input.getWidth() - nw)/2.0);
+        int t = (int) Math.round((input.getHeight() - nh)/2.0);
+        int r = (int) Math.round(nw + (input.getWidth() - nw)/2.0);
+        int b = (int) Math.round(nh + (input.getHeight() - nh)/2.0);
+        final Rect src = new Rect(l, t, r, b);
+
+        p.setAntiAlias(true);
+        c.drawARGB(0, 0, 0, 0);
+        c.drawOval(0, 0, dimensions.width, dimensions.height, p);
+        p.setXfermode(new PorterDuffXfermode(Mode.SRC_IN));
+        c.drawBitmap(input, src, dst, p);
+        return bitmap;
     }
     public Bitmap getLetterTile(final Dimensions dimensions, final String displayName,
             final String address) {

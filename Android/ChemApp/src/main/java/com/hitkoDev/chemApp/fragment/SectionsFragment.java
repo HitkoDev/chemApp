@@ -99,21 +99,25 @@ public class SectionsFragment extends Fragment {
     
     public void loadLevel(final int level){
         if(level > 0){
-            if(level == loadedLevel){
-                recyclerView.setAdapter(adapter);
-            } else {
+            if(level != loadedLevel) {
                 new LoadDataTask(getContext(), new OnJSONResponseListener() {
                     @Override
                     public void onSuccess(JSONObject response) {
                         try {
                             JSONArray l = response.getJSONObject("object").getJSONArray("sections");
+                            sections.clear();
                             for(int i = 0; i < l.length(); i++){
                                 try {
-                                    Section s = new Section(l.getJSONObject(i));
-                                    s.setTile(new BitmapDrawable(getContext().getResources(), tileProvider.getLetterTile(tileDimensions, s.getName(), s.getId() + "")));
+                                    Section s = new Section(l.getJSONObject(i), getContext(), new Section.OnIconLoaded() {
+                                        @Override
+                                        public void notifyLoaded(Section s) {
+                                            s.setTile(new BitmapDrawable(getContext().getResources(), tileProvider.makeCircle(s.isChild() ? subTileDimensions : tileDimensions, s.getIcon())));
+                                        }
+                                    });
+                                    s.setTile(new BitmapDrawable(getContext().getResources(), s.loadedIcon() ? tileProvider.makeCircle(tileDimensions, s.getIcon()) : tileProvider.getLetterTile(tileDimensions, s.getName(), s.getId() + "")));
                                     sections.add(s);
                                     if(s.hasChildren()) {
-                                        for(Section sub : s.getChildren()) sub.setTile(new BitmapDrawable(getContext().getResources(), tileProvider.getLetterTile(subTileDimensions, sub.getName(), sub.getId() + "")));
+                                        for(Section sub : s.getChildren()) sub.setTile(new BitmapDrawable(getContext().getResources(), s.loadedIcon() ? tileProvider.makeCircle(subTileDimensions, s.getIcon()) : tileProvider.getLetterTile(subTileDimensions, sub.getName(), sub.getId() + "")));
                                         sections.addAll(s.getChildren());
                                     }
                                 } catch (JSONException ex) {

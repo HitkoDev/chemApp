@@ -5,7 +5,11 @@
  */
 package com.hitkoDev.chemApp.data;
 
+import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
+import com.hitkoDev.chemApp.rest.LoadImageTask;
+import com.hitkoDev.chemApp.rest.OnImageLoadedListener;
 import java.util.ArrayList;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -17,12 +21,18 @@ import org.json.JSONObject;
  */
 public class Section {
     
+    public interface OnIconLoaded {
+        public void notifyLoaded(Section s);
+    }
+    
     private int id;
     private String name;
     private String desc;
     private Section parent;
     private ArrayList<Section> children;
     private Drawable tile;
+    private Bitmap icon;
+    private OnIconLoaded listener;
     
     public Section(JSONObject o) throws JSONException {
         if(o.has("id")) id = o.getInt("id");
@@ -35,6 +45,53 @@ public class Section {
                 children.add(new Section(sec.getJSONObject(i), this));
             }
         }
+    }
+    
+    public Section(JSONObject o, Context c, OnIconLoaded l) throws JSONException {
+        this(o);
+        listener = l;
+        if(o.has("sections")){
+            JSONArray sec = o.getJSONArray("sections");
+            children = new ArrayList();
+            for(int i = 0; i < sec.length(); i++){
+                children.add(new Section(sec.getJSONObject(i), this, c, l));
+            }
+        }
+        if(o.has("icon")){
+            String i = o.getString("icon").trim();
+            if(!i.isEmpty()){
+                new LoadImageTask(c, new OnImageLoadedListener() {
+                    @Override
+                    public void onSuccess(Bitmap image) {
+                        icon = image;
+                        if(listener != null) listener.notifyLoaded(Section.this);
+                    }
+
+                    @Override
+                    public void onFail(String response) {
+                       System.out.println(response);
+                    }
+                }).executeCached(i);
+            }
+        }
+    }
+    
+    public Section(JSONObject o, Section p) throws JSONException {
+        this(o);
+        parent = p;
+    }
+    
+    public Section(JSONObject o, Section p, Context c, OnIconLoaded l) throws JSONException {
+        this(o, c, l);
+        parent = p;
+    }
+    
+    public boolean loadedIcon(){
+        return icon != null;
+    }
+    
+    public Bitmap getIcon(){
+        return icon;
     }
     
     public int getChildrenCount(){
@@ -51,11 +108,6 @@ public class Section {
 
     public Drawable getTile() {
         return tile;
-    }
-    
-    public Section(JSONObject o, Section p) throws JSONException {
-        this(o);
-        parent = p;
     }
 
     public int getId() {
@@ -81,4 +133,5 @@ public class Section {
     public boolean hasChildren() {
         return children != null && !children.isEmpty();
     }
+    
 }

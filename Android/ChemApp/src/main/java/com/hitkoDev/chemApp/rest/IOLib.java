@@ -9,6 +9,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -17,6 +20,18 @@ import java.util.logging.Logger;
  * @author hitno
  */
 public class IOLib {
+    
+    public static String md5(String s){
+        try {
+            MessageDigest digester = MessageDigest.getInstance("MD5");
+            byte[] bytes = s.getBytes();
+            digester.update(bytes, 0, bytes.length);
+            return new BigInteger(1, digester.digest()).toString(16);
+        } catch (NoSuchAlgorithmException ex) {
+            Logger.getLogger(LoadDataTask.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return "";
+    }
     
     public static String readStream(InputStream in){
         BufferedReader br = new BufferedReader(new InputStreamReader(in));
