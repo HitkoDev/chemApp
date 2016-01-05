@@ -13,7 +13,6 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.RecyclerView.LayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnLayoutChangeListener;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -42,14 +41,12 @@ public class LessonsFragment extends Fragment {
     private RecyclerView recyclerView;
     private LayoutManager layoutManager;
     private int loadedSection;
-    private ArrayList<Lesson> lessons = new ArrayList();
+    private final ArrayList<Lesson> lessons = new ArrayList();
     private LessonAdapter adapter;
     
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.lessons_content, container, false);
-        
-       // TextView t = (TextView) v.findViewById(R.id.section_name);
         
         settings = getContext().getSharedPreferences(ChemApp.PREF_NAME, 0);
         prefEditor = settings.edit();
@@ -61,8 +58,6 @@ public class LessonsFragment extends Fragment {
         adapter = new LessonAdapter();
         
         loadContent(settings.getInt("section", 0));
-        
-       // t.setText(settings.getInt("section", 0) + "");
         
         return v;
     }
