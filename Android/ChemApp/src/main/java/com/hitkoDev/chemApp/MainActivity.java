@@ -308,6 +308,8 @@ public class MainActivity extends AppCompatActivity implements
         
         if(sectionsFragment == null){
             sectionsFragment = new SectionsFragment();
+        } else {
+            sectionsFragment.loadLevel(level);
         }
         getSupportFragmentManager().beginTransaction().replace(helperFrame == null ? R.id.main_frame : R.id.helper_frame, sectionsFragment).commit();
         if(helperFrame != null) helperFrame.setVisibility(View.VISIBLE);

@@ -71,7 +71,7 @@ public class Section {
                     public void onFail(String response) {
                        System.out.println(response);
                     }
-                }).executeCached(i);
+                }).execute(i);
             }
         }
     }

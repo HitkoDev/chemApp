@@ -136,6 +136,8 @@ public class SectionsFragment extends Fragment {
                         System.out.println(response);
                     }
                 }).executeCached("level", level+"");
+            } else {
+                if(recyclerView.getAdapter() != adapter) recyclerView.setAdapter(adapter);
             }
         }
     }
@@ -266,6 +268,7 @@ public class SectionsFragment extends Fragment {
     @Override
     public void onCreate(Bundle bundle) {
         super.onCreate(bundle); //To change body of generated methods, choose Tools | Templates.
+        setRetainInstance(true);
         if(bundle != null){
             int[] k = bundle.getIntArray(EXPANDED_KEYS);
             boolean[] v = bundle.getBooleanArray(EXPANDED_VALUES);

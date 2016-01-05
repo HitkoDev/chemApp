@@ -45,7 +45,7 @@ public class LoadDataTask extends AsyncTask<String, Void, String> {
     }
     
     public LoadDataTask executeCached(String... urls){
-        file = new File(cache, IOLib.md5(urls[0]) + ".png");
+        file = new File(cache, IOLib.md5(urls[0]) + ".json");
         System.out.println(file);
         if(checkNetwork()){
             return (LoadDataTask) execute(urls);
