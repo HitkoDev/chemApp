@@ -9,7 +9,7 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.text.Html.ImageGetter;
 import com.hitkoDev.chemApp.data.LoadedDrawable;
-import com.hitkoDev.chemApp.data.LoadedDrawable.OnDrawableLoadedListener;
+import com.hitkoDev.chemApp.data.LoadedDrawable.OnDrawableUpdatedListener;
 
 /**
  *
@@ -18,9 +18,9 @@ import com.hitkoDev.chemApp.data.LoadedDrawable.OnDrawableLoadedListener;
 public class TextImageGetter implements ImageGetter {
     
     private final Context context;
-    private final OnDrawableLoadedListener listener;
+    private final OnDrawableUpdatedListener listener;
     
-    public TextImageGetter(Context c, OnDrawableLoadedListener l) {
+    public TextImageGetter(Context c, OnDrawableUpdatedListener l) {
         context = c;
         listener = l;
     }

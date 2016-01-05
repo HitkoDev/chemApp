@@ -13,6 +13,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.RecyclerView.LayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnLayoutChangeListener;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -21,8 +22,6 @@ import com.hitkoDev.chemApp.ChemApp;
 import com.hitkoDev.chemApp.MainActivity;
 import com.hitkoDev.chemApp.R;
 import com.hitkoDev.chemApp.data.Lesson;
-import com.hitkoDev.chemApp.data.LoadedDrawable;
-import com.hitkoDev.chemApp.data.LoadedDrawable.OnDrawableLoadedListener;
 import com.hitkoDev.chemApp.rest.LoadDataTask;
 import com.hitkoDev.chemApp.rest.OnJSONResponseListener;
 import java.util.ArrayList;
@@ -30,6 +29,7 @@ import java.util.logging.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import com.hitkoDev.chemApp.data.LoadedDrawable.OnDrawableUpdatedListener;
 
 /**
  *
@@ -79,9 +79,9 @@ public class LessonsFragment extends Fragment {
                             for(int i = 0; i < l.length(); i++){
                                 try {
                                     final int index = lessons.size();
-                                    Lesson ls = new Lesson(l.getJSONObject(i), getContext(), new OnDrawableLoadedListener(){
+                                    Lesson ls = new Lesson(l.getJSONObject(i), getContext(), new OnDrawableUpdatedListener(){
                                         @Override
-                                        public void onDrawableLoaded() {
+                                        public void onDrawableUpdated() {
                                             adapter.notifyItemChanged(index);
                                         }
                                     });
@@ -101,7 +101,7 @@ public class LessonsFragment extends Fragment {
                     public void onFail(String response) {
                         System.out.println(response);
                     }
-                }).executeCached("section", section+"");
+                }).execute("section", section+"");
             } else {
                 if(recyclerView.getAdapter() != adapter) recyclerView.setAdapter(adapter);
             }
@@ -141,7 +141,7 @@ public class LessonsFragment extends Fragment {
         }
 
         @Override
-        public void onBindViewHolder(ViewHolder vh, int i) {
+        public void onBindViewHolder(ViewHolder vh, final int i) {
             Lesson l = lessons.get(i);
             switch(l.getClassKey()){
                 case "caText":

@@ -11,11 +11,11 @@ import android.text.Html;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.style.ImageSpan;
-import com.hitkoDev.chemApp.data.LoadedDrawable.OnDrawableLoadedListener;
 import com.hitkoDev.chemApp.helper.CenteredImageSpan;
 import com.hitkoDev.chemApp.rest.TextImageGetter;
 import org.json.JSONException;
 import org.json.JSONObject;
+import com.hitkoDev.chemApp.data.LoadedDrawable.OnDrawableUpdatedListener;
 
 /**
  *
@@ -40,7 +40,7 @@ public class Lesson {
         if(content != null) contentParsed = centerImages(Html.fromHtml(content));
     }
     
-    public Lesson(JSONObject o, Context c, OnDrawableLoadedListener l) throws JSONException {
+    public Lesson(JSONObject o, Context c, OnDrawableUpdatedListener l) throws JSONException {
         this(o);
         TextImageGetter g = new TextImageGetter(c, l);
         if(name != null) nameParsed = centerImages(Html.fromHtml(name, g, null));
@@ -51,14 +51,28 @@ public class Lesson {
     private Spanned centerImages(Spanned sp){
         SpannableStringBuilder b = new SpannableStringBuilder(sp);
         ImageSpan[] img = b.getSpans(0, sp.length(), ImageSpan.class);
+        int firstImg = b.length() - 1;
+        int lastImg = 0;
         for(ImageSpan i : img) {
             int s = b.getSpanStart(i);
             int e = b.getSpanEnd(i);
-            int f = b.getSpanFlags(i);
-            b.removeSpan(i);
-            b.setSpan(new CenteredImageSpan(i.getDrawable()), s, e, f);
+            if(s < firstImg) firstImg = s;
+            if(e > lastImg) lastImg = e;
+            if(i.getDrawable().getClass() == LoadedDrawable.class && ((LoadedDrawable)i.getDrawable()).isFormula()){
+                int f = b.getSpanFlags(i);
+                b.removeSpan(i);
+                b.setSpan(new CenteredImageSpan(i.getDrawable()), s, e, f);
+            }
         }
-        return b;
+        if(b.length() > 0){
+            int first = 0;
+            int last = b.length() - 1;
+            while(Character.isWhitespace(b.charAt(first)) && first < last && first < firstImg) first++;
+            while(Character.isWhitespace(b.charAt(last)) && last > first && last > lastImg) last--;
+            return new SpannableStringBuilder(b.subSequence(first, last + 1));
+        } else {
+            return b;
+        }
     }
 
     public Drawable getImageContent() {

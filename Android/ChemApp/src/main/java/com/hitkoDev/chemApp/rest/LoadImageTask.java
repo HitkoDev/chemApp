@@ -50,7 +50,6 @@ public class LoadImageTask extends AsyncTask<String, Void, Bitmap> {
     @Override
     protected Bitmap doInBackground(String... urls) {
         file = new File(cache, IOLib.md5(urls[0]) + ".png");
-        System.out.println(file);
         if(file.exists()){
             return BitmapFactory.decodeFile(file.getPath());
         } else if(checkNetwork()){
@@ -58,7 +57,9 @@ public class LoadImageTask extends AsyncTask<String, Void, Bitmap> {
             Request request = new Request.Builder().url(urls[0]).build();
             try {
                 Response response = client.newCall(request).execute();
-                return BitmapFactory.decodeStream(response.body().byteStream());
+                Bitmap b = BitmapFactory.decodeStream(response.body().byteStream());
+                new StoreFileTask().execute(b);
+                return b;
             } catch(IOException ex){
                 Logger.getLogger(MainActivity.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
                 return null;
@@ -74,7 +75,6 @@ public class LoadImageTask extends AsyncTask<String, Void, Bitmap> {
             listener.onFail("Can't load the image");
         } else {
             listener.onSuccess(result);
-            new StoreFileTask().execute(result);
         }
     }
     

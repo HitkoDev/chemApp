@@ -127,7 +127,7 @@ public class MainActivity extends AppCompatActivity implements
             public void onFail(String response) {
                 System.out.println(response);
             }
-        }).executeCached("level");
+        }).execute("level");
     }
     
     @Override

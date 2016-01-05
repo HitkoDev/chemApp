@@ -135,7 +135,7 @@ public class SectionsFragment extends Fragment {
                     public void onFail(String response) {
                         System.out.println(response);
                     }
-                }).executeCached("level", level+"");
+                }).execute("level", level+"");
             } else {
                 if(recyclerView.getAdapter() != adapter) recyclerView.setAdapter(adapter);
             }
