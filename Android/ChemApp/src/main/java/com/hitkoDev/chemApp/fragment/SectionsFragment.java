@@ -5,11 +5,13 @@
  */
 package com.hitkoDev.chemApp.fragment;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -25,7 +27,9 @@ import android.widget.TextView;
 import com.hitkoDev.chemApp.ChemApp;
 import com.hitkoDev.chemApp.MainActivity;
 import com.hitkoDev.chemApp.R;
+import com.hitkoDev.chemApp.data.Level;
 import com.hitkoDev.chemApp.data.Section;
+import com.hitkoDev.chemApp.helper.FragmentActionsListener;
 import com.hitkoDev.chemApp.rest.LoadDataTask;
 import com.hitkoDev.chemApp.rest.OnJSONResponseListener;
 import com.hitkoDev.chemApp.tiles.ImageCanvas.Dimensions;
@@ -49,25 +53,24 @@ public class SectionsFragment extends Fragment {
     private static final String EXPANDED_KEYS = "chemApp.SectionsFragment.expand_keys";
     private static final String EXPANDED_VALUES = "chemApp.SectionsFragment.expand_values";
     private int loadedLevel = 0;
+    private Level level;
     
-    public interface onSelectedListener {
-        public void onSectionSelected(int section);
-    }
-    
-    private onSelectedListener listener;
+    private FragmentActionsListener listener;
     private RecyclerView recyclerView;
     private RecyclerView.Adapter adapter;
     private RecyclerView.LayoutManager layoutManager;
     private final ArrayList<Section> sections = new ArrayList();
 
     @Override
-    public void onAttach(Context activity) {
-        super.onAttach(activity);
-        try {
-            listener = (onSelectedListener) activity;
-        } catch (ClassCastException e) {
-            Logger.getLogger(SectionsFragment.class.getName()).log(java.util.logging.Level.SEVERE, null, e);
-        }
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if(context instanceof FragmentActionsListener) listener = (FragmentActionsListener) context;
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        listener = null;
     }
     
     @Override
@@ -92,19 +95,34 @@ public class SectionsFragment extends Fragment {
         tileProvider = new LetterTileProvider(getResources());
         tileProvider.noCache = true;
         
-        loadLevel(settings.getInt("level", 0));
-        
         return v;
     }
     
-    public void loadLevel(final int level){
+    private boolean started;
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        started = true;
+        loadSections(settings.getInt("level", 0));
+    }
+
+    @Override
+    public void onStop() {
+        started = false;
+        super.onStop(); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    public void loadSections(final int level){
+        if(!started) return;
         if(level > 0){
             if(level != loadedLevel) {
-                new LoadDataTask(getContext(), new OnJSONResponseListener() {
+                if(getContext() != null) new LoadDataTask(getContext(), new OnJSONResponseListener() {
                     @Override
                     public void onSuccess(JSONObject response) {
                         try {
                             JSONArray l = response.getJSONObject("object").getJSONArray("sections");
+                            SectionsFragment.this.level = new Level(response.getJSONObject("object"));
                             sections.clear();
                             for(int i = 0; i < l.length(); i++){
                                 try {
@@ -114,7 +132,7 @@ public class SectionsFragment extends Fragment {
                                             s.setTile(new BitmapDrawable(getContext().getResources(), tileProvider.makeCircle(s.isChild() ? subTileDimensions : tileDimensions, s.getIcon())));
                                         }
                                     });
-                                    s.setTile(new BitmapDrawable(getContext().getResources(), s.loadedIcon() ? tileProvider.makeCircle(tileDimensions, s.getIcon()) : tileProvider.getLetterTile(tileDimensions, s.getName(), s.getId() + "")));
+                                    if(!s.hasIcon()) s.setTile(new BitmapDrawable(getContext().getResources(), tileProvider.getLetterTile(tileDimensions, s.getName(), s.getId() + "")));
                                     sections.add(s);
                                     if(s.hasChildren()) {
                                         for(Section sub : s.getChildren()) sub.setTile(new BitmapDrawable(getContext().getResources(), s.loadedIcon() ? tileProvider.makeCircle(subTileDimensions, s.getIcon()) : tileProvider.getLetterTile(subTileDimensions, sub.getName(), sub.getId() + "")));
@@ -129,6 +147,7 @@ public class SectionsFragment extends Fragment {
                         }
                         loadedLevel = level;
                         recyclerView.setAdapter(adapter);
+                        setHeader();
                     }
 
                     @Override
@@ -138,6 +157,7 @@ public class SectionsFragment extends Fragment {
                 }).execute("level", level+"");
             } else {
                 if(recyclerView.getAdapter() != adapter) recyclerView.setAdapter(adapter);
+                setHeader();
             }
         }
     }
@@ -149,6 +169,10 @@ public class SectionsFragment extends Fragment {
     private int paddingH;
     private int offsetPadding;
     private LetterTileProvider tileProvider;
+
+    private void setHeader() {
+        if(listener != null) listener.setFragmentDescription(level.getName());
+    }
         
     public class ViewHolder extends RecyclerView.ViewHolder {
         // each data item is just a string in this case

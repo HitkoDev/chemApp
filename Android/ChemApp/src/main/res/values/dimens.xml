@@ -10,4 +10,5 @@
     <dimen name="tile_letter_font_size_medium">32dp</dimen>
     <dimen name="letter_tile_size">56dp</dimen>
     <dimen name="letter_sub_tile_size">40dp</dimen>
+    <dimen name="splash_button_width">192dp</dimen>
 </resources>

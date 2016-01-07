@@ -5,12 +5,17 @@
  */
 package com.hitkoDev.chemApp.fragment;
 
+import android.app.ActivityManager;
+import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.RecyclerView.LayoutManager;
 import android.support.v7.widget.StaggeredGridLayoutManager;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,6 +34,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import com.hitkoDev.chemApp.data.LoadedDrawable.OnDrawableUpdatedListener;
+import com.hitkoDev.chemApp.data.Section;
+import com.hitkoDev.chemApp.helper.FragmentActionsListener;
+import com.hitkoDev.chemApp.tiles.ImageCanvas;
+import com.hitkoDev.chemApp.tiles.LetterTileProvider;
 
 /**
  *
@@ -43,6 +52,28 @@ public class LessonsFragment extends Fragment {
     private int loadedSection;
     private final ArrayList<Lesson> lessons = new ArrayList();
     private LessonAdapter adapter;
+    private FragmentActionsListener listener;
+    private Section section;
+    private ImageCanvas.Dimensions tileDimensions;
+    private LetterTileProvider tileProvider;
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if(context instanceof FragmentActionsListener) listener = (FragmentActionsListener) context;
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        listener = null;
+    }
+
+    @Override
+    public void onCreate(Bundle bundle) {
+        super.onCreate(bundle); //To change body of generated methods, choose Tools | Templates.
+        setRetainInstance(true);
+    }
     
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -52,24 +83,37 @@ public class LessonsFragment extends Fragment {
         prefEditor = settings.edit();
         settings.getInt("section", 0);
         
+        int d = getResources().getDimensionPixelSize(R.dimen.letter_tile_size);
+        tileDimensions = new ImageCanvas.Dimensions(d, d, 1, getResources().getDimensionPixelSize(R.dimen.tile_letter_font_size_medium));
+        tileProvider = new LetterTileProvider(getResources());
+        tileProvider.noCache = true;
+        
         recyclerView = (RecyclerView) v.findViewById(R.id.lesson_recycler_view);
         layoutManager = new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.VERTICAL);
         recyclerView.setLayoutManager(layoutManager);
         adapter = new LessonAdapter();
         
-        loadContent(settings.getInt("section", 0));
-        
         return v;
     }
-    
-    public void loadContent(final int section){
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        final int section = settings.getInt("section", 0);
         if(section > 0){
             if(section != loadedSection) {
-                new LoadDataTask(getContext(), new OnJSONResponseListener() {
+                if(getContext() != null) new LoadDataTask(getContext(), new OnJSONResponseListener() {
                     @Override
                     public void onSuccess(JSONObject response) {
                         try {
                             JSONArray l = response.getJSONObject("object").getJSONArray("content");
+                            LessonsFragment.this.section = new Section(response.getJSONObject("object"), getContext(), new Section.OnIconLoaded(){
+                                @Override
+                                public void notifyLoaded(Section s) {
+                                    setHeader();
+                                }
+                            });
+                            if(!LessonsFragment.this.section.hasIcon()) setHeader();
                             lessons.clear();
                             for(int i = 0; i < l.length(); i++){
                                 try {
@@ -99,8 +143,19 @@ public class LessonsFragment extends Fragment {
                 }).execute("section", section+"");
             } else {
                 if(recyclerView.getAdapter() != adapter) recyclerView.setAdapter(adapter);
+                setHeader();
             }
         }
+    }
+    
+    private void setHeader(){
+        Resources.Theme th = getContext().getTheme();
+        TypedValue val = new TypedValue();
+        th.resolveAttribute(R.attr.colorPrimary, val, true);
+        
+        Bitmap b = section.loadedIcon() ? tileProvider.makeCircle(tileDimensions, section.getIcon()) : tileProvider.getLetterTile(tileDimensions, section.getName(), section.getId() + "");
+        
+        if(listener != null) listener.setFragmentDescription(new ActivityManager.TaskDescription(section.getName(), b, val.data), section.getName());
     }
     
     public class ViewHolder extends RecyclerView.ViewHolder {

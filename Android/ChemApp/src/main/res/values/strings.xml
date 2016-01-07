@@ -14,4 +14,8 @@
     <string name="not_logged_in">Neprijavljen</string>
     
     <string name="rest_base">https://amaranth.hitko.si/rest/</string>
+    
+    <string name="continue_learning">Nadaljuj z učenjem</string>
+    <string name="take_exam">Preveri znanje</string>
+    
 </resources>

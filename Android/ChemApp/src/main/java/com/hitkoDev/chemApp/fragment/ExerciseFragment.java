@@ -5,13 +5,21 @@
  */
 package com.hitkoDev.chemApp.fragment;
 
+import android.app.Activity;
+import android.app.ActivityManager;
+import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.RecyclerView.LayoutManager;
 import android.support.v7.widget.StaggeredGridLayoutManager;
+import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -30,8 +38,12 @@ import com.hitkoDev.chemApp.MainActivity;
 import com.hitkoDev.chemApp.R;
 import com.hitkoDev.chemApp.data.Exercise;
 import com.hitkoDev.chemApp.data.LoadedDrawable;
+import com.hitkoDev.chemApp.data.Section;
+import com.hitkoDev.chemApp.helper.FragmentActionsListener;
 import com.hitkoDev.chemApp.rest.LoadDataTask;
 import com.hitkoDev.chemApp.rest.OnJSONResponseListener;
+import com.hitkoDev.chemApp.tiles.ImageCanvas;
+import com.hitkoDev.chemApp.tiles.LetterTileProvider;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 import org.json.JSONArray;
@@ -55,9 +67,32 @@ public class ExerciseFragment extends Fragment {
     private Exercise exercise;
     private FloatingActionButton action;
     private RecyclerView.Adapter adapter;
+    private Section section;
     
     private int marginFull = 0;
     private int marginItems = 0;
+    
+    private FragmentActionsListener listener;
+    private ImageCanvas.Dimensions tileDimensions;
+    private LetterTileProvider tileProvider;
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if(context instanceof FragmentActionsListener) listener = (FragmentActionsListener) context;
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        listener = null;
+    }
+
+    @Override
+    public void onCreate(Bundle bundle) {
+        super.onCreate(bundle); //To change body of generated methods, choose Tools | Templates.
+        setRetainInstance(true);
+    }
     
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -66,6 +101,11 @@ public class ExerciseFragment extends Fragment {
         settings = getContext().getSharedPreferences(ChemApp.PREF_NAME, 0);
         prefEditor = settings.edit();
         settings.getInt("section", 0);
+        
+        int d = getResources().getDimensionPixelSize(R.dimen.letter_tile_size);
+        tileDimensions = new ImageCanvas.Dimensions(d, d, 1, getResources().getDimensionPixelSize(R.dimen.tile_letter_font_size_medium));
+        tileProvider = new LetterTileProvider(getResources());
+        tileProvider.noCache = true;
         
         action = (FloatingActionButton) v.findViewById(R.id.exercise_action);
         action.setOnClickListener(new OnClickListener() {
@@ -77,23 +117,32 @@ public class ExerciseFragment extends Fragment {
         
         recyclerView = (RecyclerView) v.findViewById(R.id.exercise_recycler_view);
         
-        loadExercises(settings.getInt("section", 0));
-        
         marginFull = Math.round(getContext().getResources().getDimension(R.dimen.activity_vertical_margin));
         marginItems = Math.round(getContext().getResources().getDimension(R.dimen.activity_vertical_margin)/2);
         
         return v;
     }
 
-    private void loadExercises(final int section) {
+    @Override
+    public void onStart() {
+        super.onStart();
+        final int section = settings.getInt("section", 0);
+        
         exerciseNumber = -1;
         if(section > 0){
             if(section != loadedSection) {
-                new LoadDataTask(getContext(), new OnJSONResponseListener() {
+                if(getContext() != null) new LoadDataTask(getContext(), new OnJSONResponseListener() {
                     @Override
                     public void onSuccess(JSONObject response) {
                         try {
                             JSONArray l = response.getJSONObject("object").getJSONArray("exercises");
+                            ExerciseFragment.this.section = new Section(response.getJSONObject("object"), getContext(), new Section.OnIconLoaded(){
+                                @Override
+                                public void notifyLoaded(Section s) {
+                                    setHeader();
+                                }
+                            });
+                            if(!ExerciseFragment.this.section.hasIcon()) setHeader();
                             exercises.clear();
                             for(int i = 0; i < l.length(); i++){
                                 try {
@@ -146,8 +195,19 @@ public class ExerciseFragment extends Fragment {
                 }).execute("section", section+"");
             } else {
                 if(!exercises.isEmpty()) showExercise(0);
+                setHeader();
             }
         }
+    }
+    
+    private void setHeader(){
+        Resources.Theme th = getContext().getTheme();
+        TypedValue val = new TypedValue();
+        th.resolveAttribute(R.attr.colorPrimary, val, true);
+        
+        Bitmap b = section.loadedIcon() ? tileProvider.makeCircle(tileDimensions, section.getIcon()) : tileProvider.getLetterTile(tileDimensions, section.getName(), section.getId() + "");
+        
+        if(listener != null) listener.setFragmentDescription(new ActivityManager.TaskDescription(section.getName(), b, val.data), section.getName());
     }
     
     public void checkAnswers() {

@@ -10,7 +10,11 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import com.hitkoDev.chemApp.rest.LoadImageTask;
 import com.hitkoDev.chemApp.rest.OnImageLoadedListener;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -33,11 +37,17 @@ public class Section {
     private Drawable tile;
     private Bitmap icon;
     private OnIconLoaded listener;
+    private String iconURL;
     
     public Section(JSONObject o) throws JSONException {
         if(o.has("id")) id = o.getInt("id");
         if(o.has("name")) name = o.getString("name");
         if(o.has("description")) desc = o.getString("description");
+        if(o.has("icon")) try {
+            iconURL = URLDecoder.decode(o.getString("icon"), "UTF-8").trim();
+        } catch (Exception ex) {
+            
+        }
         if(o.has("sections")){
             JSONArray sec = o.getJSONArray("sections");
             children = new ArrayList();
@@ -57,23 +67,24 @@ public class Section {
                 children.add(new Section(sec.getJSONObject(i), this, c, l));
             }
         }
-        if(o.has("icon")){
-            String i = o.getString("icon").trim();
-            if(!i.isEmpty()){
-                new LoadImageTask(c, new OnImageLoadedListener() {
-                    @Override
-                    public void onSuccess(Bitmap image) {
-                        icon = image;
-                        if(listener != null) listener.notifyLoaded(Section.this);
-                    }
+        if(hasIcon()){
+            new LoadImageTask(c, new OnImageLoadedListener() {
+                @Override
+                public void onSuccess(Bitmap image) {
+                    icon = image;
+                    if(listener != null) listener.notifyLoaded(Section.this);
+                }
 
-                    @Override
-                    public void onFail(String response) {
-                       System.out.println(response);
-                    }
-                }).execute(i);
-            }
+                @Override
+                public void onFail(String response) {
+                   System.out.println(response);
+                }
+            }).execute(iconURL);
         }
+    }
+    
+    public final boolean hasIcon(){
+        return iconURL != null && !iconURL.isEmpty();
     }
     
     public Section(JSONObject o, Section p) throws JSONException {

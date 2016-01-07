@@ -1,5 +1,6 @@
 package com.hitkoDev.chemApp;
 
+import android.app.ActivityManager;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
@@ -22,15 +23,22 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.util.TypedValue;
 import android.widget.FrameLayout;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.games.Games;
 import com.google.example.games.basegameutils.BaseGameUtils;
+import com.hitkoDev.chemApp.fragment.ExamFragment;
 import com.hitkoDev.chemApp.fragment.ExerciseFragment;
 import com.hitkoDev.chemApp.fragment.LessonsFragment;
 import com.hitkoDev.chemApp.fragment.SectionsFragment;
+import com.hitkoDev.chemApp.fragment.SplashFragment;
+import com.hitkoDev.chemApp.helper.FragmentActionsListener;
 
 /**
  *
@@ -40,15 +48,17 @@ public class MainActivity extends AppCompatActivity implements
         NavigationView.OnNavigationItemSelectedListener,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
-        SectionsFragment.onSelectedListener {
+        FragmentActionsListener {
     
     private final static int LESSONS = 1;
     private final static int EXERCISES = 2;
     private final static int EXAM = 3;
     
-    private final static String FRAGMENT_LESSONS = "ChemApp.Lessons";
+    private final static String FRAGMENT_EXAM = "ChemApp.Exam";
     private final static String FRAGMENT_EXERCISE = "ChemApp.Exercise";
+    private final static String FRAGMENT_LESSONS = "ChemApp.Lessons";
     private final static String FRAGMENT_SECTIONS = "ChemApp.Sections";
+    private final static String FRAGMENT_SPLASH = "ChemApp.Splash";
     
     private ArrayList<Level> levels = new ArrayList();
     private NavigationView navigationView;
@@ -75,6 +85,8 @@ public class MainActivity extends AppCompatActivity implements
     private SectionsFragment sectionsFragment;
     private LessonsFragment lessonsFragment;
     private ExerciseFragment exerciseFragment;
+    private ExamFragment examFragment;
+    private SplashFragment splashFragment;
     
     @Override
     protected void onCreate(Bundle bundle) {
@@ -110,6 +122,11 @@ public class MainActivity extends AppCompatActivity implements
         
         lvl = navigationView.getMenu().findItem(R.id.nav_lessons) == null;
         userName = (TextView) navigationView.getHeaderView(0).findViewById(R.id.user_name);
+        
+        if(splashFragment == null) {
+            splashFragment = new SplashFragment();
+        }
+        if(getSupportFragmentManager().getFragments() == null || getSupportFragmentManager().getFragments().isEmpty()) getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, splashFragment, FRAGMENT_SPLASH).commit();
         
         new LoadDataTask(this, new OnJSONResponseListener() {
             @Override
@@ -222,6 +239,7 @@ public class MainActivity extends AppCompatActivity implements
     }
     
     private void setLevel(int l){
+        boolean invalidate = level != l;
         level = l;
         prefEditor.putInt("level", l);
         prefEditor.commit();
@@ -231,6 +249,21 @@ public class MainActivity extends AppCompatActivity implements
             for(Level lv : levels) if(lv.getId() == level){
                 tw.setText(lv.getName());
                 break;
+            }
+        }
+        if(sectionsFragment != null) sectionsFragment.loadSections(level);
+        if(invalidate){
+            int c = getSupportFragmentManager().getBackStackEntryCount();
+            if(c > 0){
+                c--;
+                switch(getSupportFragmentManager().getBackStackEntryAt(c).getName()){
+                    case FRAGMENT_LESSONS:
+                    case FRAGMENT_EXERCISE:
+                    case FRAGMENT_EXAM:
+                        this.prefEditor.putInt("section", 0);
+                        showSections();
+                        break;
+                }
             }
         }
     }
@@ -266,7 +299,6 @@ public class MainActivity extends AppCompatActivity implements
                     break;
                 default:
                     setLevel(id);
-                    if(sectionsFragment != null && sectionsFragment.isVisible()) sectionsFragment.loadLevel(id);
                     break;
             }
             updateDrawerMenu(null);
@@ -314,10 +346,8 @@ public class MainActivity extends AppCompatActivity implements
         
         if(sectionsFragment == null){
             sectionsFragment = new SectionsFragment();
-        } else {
-            sectionsFragment.loadLevel(level);
-        }
-        getSupportFragmentManager().beginTransaction().replace(helperFrame == null ? R.id.main_frame : R.id.helper_frame, sectionsFragment, FRAGMENT_SECTIONS).commit();
+        } 
+        getSupportFragmentManager().beginTransaction().replace(helperFrame == null ? R.id.main_frame : R.id.helper_frame, sectionsFragment, FRAGMENT_SECTIONS).addToBackStack(FRAGMENT_SECTIONS).commit();
         if(helperFrame != null) helperFrame.setVisibility(View.VISIBLE);
         
     }
@@ -327,7 +357,7 @@ public class MainActivity extends AppCompatActivity implements
         if(lessonsFragment == null){
             lessonsFragment = new LessonsFragment();
         }
-        getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, lessonsFragment, FRAGMENT_LESSONS).commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, lessonsFragment, FRAGMENT_LESSONS).addToBackStack(FRAGMENT_LESSONS).commit();
         
     }
 
@@ -336,12 +366,16 @@ public class MainActivity extends AppCompatActivity implements
         if(exerciseFragment == null){
             exerciseFragment = new ExerciseFragment();
         }
-        getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, exerciseFragment, FRAGMENT_EXERCISE).commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, exerciseFragment, FRAGMENT_EXERCISE).addToBackStack(FRAGMENT_EXERCISE).commit();
         
     }
 
     private void showExam() {
         
+        if(examFragment == null){
+            examFragment = new ExamFragment();
+        }
+        getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, examFragment, FRAGMENT_EXAM).addToBackStack(FRAGMENT_EXAM).commit();
     }
     
     public void updateDrawerMenu(View v){
@@ -383,17 +417,46 @@ public class MainActivity extends AppCompatActivity implements
         prefEditor.commit();
         MenuItem m;
         switch(action){
-            case LESSONS:
-                showLessons();
-                m = navigationView.getMenu().findItem(R.id.nav_lessons);
-                if(m != null) m.setChecked(true);
-                break;
             case EXERCISES:
                 showExercises();
                 m = navigationView.getMenu().findItem(R.id.nav_exercises);
                 if(m != null) m.setChecked(true);
                 break;
+            case LESSONS:
+            default:
+                showLessons();
+                m = navigationView.getMenu().findItem(R.id.nav_lessons);
+                if(m != null) m.setChecked(true);
+                break;
         }
+    }
+
+    @Override
+    public void setFragmentDescription(ActivityManager.TaskDescription td, String title) {
+        setTaskDescription(td);
+        getSupportActionBar().setTitle(title);
+    }
+    
+    public void continueLearning(View v){
+        showLessons();
+    }
+    
+    public void takeExam(View v){
+        showExam();
+    }
+
+    @Override
+    public void setFragmentDescription(String title) {
+        getSupportActionBar().setTitle(title);
+        
+        Resources.Theme th = getTheme();
+        TypedValue val = new TypedValue();
+        th.resolveAttribute(R.attr.colorPrimary, val, true);
+        
+        Bitmap b = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
+        
+        setTaskDescription(new ActivityManager.TaskDescription(title, b, val.data));
+        
     }
     
 }
