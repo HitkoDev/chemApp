@@ -8,9 +8,9 @@ package com.hitkoDev.chemApp.fragment;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.RecyclerView.LayoutManager;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -53,7 +53,7 @@ public class LessonsFragment extends Fragment {
         settings.getInt("section", 0);
         
         recyclerView = (RecyclerView) v.findViewById(R.id.lesson_recycler_view);
-        layoutManager = new LinearLayoutManager(getContext());
+        layoutManager = new StaggeredGridLayoutManager(1, StaggeredGridLayoutManager.VERTICAL);
         recyclerView.setLayoutManager(layoutManager);
         adapter = new LessonAdapter();
         

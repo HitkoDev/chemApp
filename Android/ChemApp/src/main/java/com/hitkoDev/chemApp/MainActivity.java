@@ -28,6 +28,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.games.Games;
 import com.google.example.games.basegameutils.BaseGameUtils;
+import com.hitkoDev.chemApp.fragment.ExerciseFragment;
 import com.hitkoDev.chemApp.fragment.LessonsFragment;
 import com.hitkoDev.chemApp.fragment.SectionsFragment;
 
@@ -44,6 +45,10 @@ public class MainActivity extends AppCompatActivity implements
     private final static int LESSONS = 1;
     private final static int EXERCISES = 2;
     private final static int EXAM = 3;
+    
+    private final static String FRAGMENT_LESSONS = "ChemApp.Lessons";
+    private final static String FRAGMENT_EXERCISE = "ChemApp.Exercise";
+    private final static String FRAGMENT_SECTIONS = "ChemApp.Sections";
     
     private ArrayList<Level> levels = new ArrayList();
     private NavigationView navigationView;
@@ -69,6 +74,7 @@ public class MainActivity extends AppCompatActivity implements
     
     private SectionsFragment sectionsFragment;
     private LessonsFragment lessonsFragment;
+    private ExerciseFragment exerciseFragment;
     
     @Override
     protected void onCreate(Bundle bundle) {
@@ -260,7 +266,7 @@ public class MainActivity extends AppCompatActivity implements
                     break;
                 default:
                     setLevel(id);
-                    if(sectionsFragment != null) sectionsFragment.loadLevel(id);
+                    if(sectionsFragment != null && sectionsFragment.isVisible()) sectionsFragment.loadLevel(id);
                     break;
             }
             updateDrawerMenu(null);
@@ -311,7 +317,7 @@ public class MainActivity extends AppCompatActivity implements
         } else {
             sectionsFragment.loadLevel(level);
         }
-        getSupportFragmentManager().beginTransaction().replace(helperFrame == null ? R.id.main_frame : R.id.helper_frame, sectionsFragment).commit();
+        getSupportFragmentManager().beginTransaction().replace(helperFrame == null ? R.id.main_frame : R.id.helper_frame, sectionsFragment, FRAGMENT_SECTIONS).commit();
         if(helperFrame != null) helperFrame.setVisibility(View.VISIBLE);
         
     }
@@ -321,11 +327,16 @@ public class MainActivity extends AppCompatActivity implements
         if(lessonsFragment == null){
             lessonsFragment = new LessonsFragment();
         }
-        getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, lessonsFragment).commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, lessonsFragment, FRAGMENT_LESSONS).commit();
         
     }
 
     private void showExercises() {
+        
+        if(exerciseFragment == null){
+            exerciseFragment = new ExerciseFragment();
+        }
+        getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, exerciseFragment, FRAGMENT_EXERCISE).commit();
         
     }
 

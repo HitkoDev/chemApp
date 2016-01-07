@@ -5,10 +5,8 @@
  */
 package com.hitkoDev.chemApp.helper;
 
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.ColorFilter;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
@@ -35,8 +33,12 @@ public class CenteredImageSpan extends ImageSpan {
     public int getSize(Paint paint, CharSequence text,
             int start, int end,
             Paint.FontMetricsInt fm) {
-        Drawable d = getCachedDrawable();
-        Rect rect = d.getBounds();
+        Drawable b = getCachedDrawable();
+        if(b.getClass().equals(LoadedDrawable.class)){
+            LoadedDrawable d = (LoadedDrawable)b;
+            d.setFontFactor(paint.getTextSize());
+        }
+        Rect rect = b.getBounds();
 
         if (fm != null) {
             Paint.FontMetricsInt pfm = paint.getFontMetricsInt();
@@ -56,11 +58,7 @@ public class CenteredImageSpan extends ImageSpan {
             int top, int y, int bottom, @NonNull Paint paint) {
         Drawable b = getCachedDrawable();
         int btO = b.getBounds().bottom;
-        if(b.getClass().equals(LoadedDrawable.class)){
-            LoadedDrawable d = (LoadedDrawable)b;
-            d.setFactor(paint.getTextSize());
-            btO = d.getBottomOffset();
-        }
+        if(b.getClass().equals(LoadedDrawable.class)) btO = ((LoadedDrawable)b).getBottomOffset();
         
         b.setColorFilter(new PorterDuffColorFilter(paint.getColor(), PorterDuff.Mode.SRC_IN));
         

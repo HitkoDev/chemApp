@@ -13,6 +13,7 @@ import android.graphics.drawable.LevelListDrawable;
 import android.util.TypedValue;
 import com.hitkoDev.chemApp.rest.LoadImageTask;
 import com.hitkoDev.chemApp.rest.OnImageLoadedListener;
+import java.net.URLDecoder;
 
 /**
  *
@@ -31,7 +32,11 @@ public class LoadedDrawable extends LevelListDrawable {
 
     public LoadedDrawable(final Context c, String url, OnDrawableUpdatedListener l) {
         listener = l;
-        url = url.trim();
+        try {
+            url = URLDecoder.decode(url, "UTF-8").trim();
+        } catch (Exception ex) {
+            url = url.trim();
+        }
         if(!url.isEmpty()){
             formula = url.contains("/Enačbe/");
             new LoadImageTask(c, new OnImageLoadedListener() {
@@ -46,7 +51,7 @@ public class LoadedDrawable extends LevelListDrawable {
                     }
                     bmp = new BitmapDrawable(c.getResources(), image);
                     LoadedDrawable.this.addLevel(0, 0, bmp);
-                    setMetrics();
+                    setMetrics(true);
                 }
 
                 @Override
@@ -61,22 +66,26 @@ public class LoadedDrawable extends LevelListDrawable {
         return formula;
     }
 
-    public void setFactor(float font) {
+    public void setFontFactor(float font) {
         factor = font/83f;
-        if(image != null) setMetrics();
+        if(image != null) setMetrics(false);
     }
     
-    private void setMetrics(){ 
-        bottomOffset = Math.round(image.getHeight()*factor*0.93f);
-        setBounds(0, 0, Math.round(image.getWidth()*factor), Math.round(image.getHeight()*factor));
+    public void setFactor(float f){
+        factor = f;
+        if(image != null) setMetrics(true);
     }
-
-    @Override
-    public void setBounds(int left, int top, int right, int bottom) {
+    
+    private void setMetrics(boolean notify){ 
+        bottomOffset = Math.round(image.getHeight()*factor*0.93f);
+        setBounds(0, 0, Math.round(image.getWidth()*factor), Math.round(image.getHeight()*factor), notify);
+    }
+    
+    public void setBounds(int left, int top, int right, int bottom, boolean notify) {
         Rect b = getBounds();
         boolean changed = b.left != left || b.top != top || b.right != right || b.bottom != bottom;
-        super.setBounds(left, top, right, bottom);
-        if(image != null && changed) listener.onDrawableUpdated();
+        setBounds(left, top, right, bottom);
+        if(notify && image != null && changed) listener.onDrawableUpdated();
     }
 
     @Override
@@ -91,6 +100,10 @@ public class LoadedDrawable extends LevelListDrawable {
 
     public int getBottomOffset() {
         return bottomOffset;
+    }
+    
+    public int getRealWidth() {
+        return image.getWidth();
     }
     
     public interface OnDrawableUpdatedListener {

@@ -79,7 +79,7 @@ public class LoadDataTask extends AsyncTask<String, Void, String> {
     protected void onPostExecute(String result) {
         JSONObject json;
         try {
-            json = new JSONObject(result);
+            json = new JSONObject(result.replaceAll("&nbsp;", " "));
         } catch (Exception ex) {
             listener.onFail(result);
             return;

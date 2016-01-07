@@ -16,6 +16,7 @@ import com.hitkoDev.chemApp.rest.TextImageGetter;
 import org.json.JSONException;
 import org.json.JSONObject;
 import com.hitkoDev.chemApp.data.LoadedDrawable.OnDrawableUpdatedListener;
+import com.hitkoDev.chemApp.helper.WidthImageSpan;
 
 /**
  *
@@ -48,7 +49,7 @@ public class Lesson {
         if(classKey != null && classKey.equals("caImage")) imageContent = g.getDrawable(content);
     }
     
-    private Spanned centerImages(Spanned sp){
+    public static Spanned centerImages(Spanned sp){
         SpannableStringBuilder b = new SpannableStringBuilder(sp);
         ImageSpan[] img = b.getSpans(0, sp.length(), ImageSpan.class);
         int firstImg = b.length() - 1;
@@ -58,18 +59,33 @@ public class Lesson {
             int e = b.getSpanEnd(i);
             if(s < firstImg) firstImg = s;
             if(e > lastImg) lastImg = e;
-            if(i.getDrawable().getClass() == LoadedDrawable.class && ((LoadedDrawable)i.getDrawable()).isFormula()){
-                int f = b.getSpanFlags(i);
-                b.removeSpan(i);
-                b.setSpan(new CenteredImageSpan(i.getDrawable()), s, e, f);
+            if(i.getDrawable().getClass() == LoadedDrawable.class) {
+                if(((LoadedDrawable)i.getDrawable()).isFormula()){
+                    int f = b.getSpanFlags(i);
+                    b.removeSpan(i);
+                    b.setSpan(new CenteredImageSpan(i.getDrawable()), s, e, f);
+                } else {
+                    int f = b.getSpanFlags(i);
+                    b.removeSpan(i);
+                    b.setSpan(new WidthImageSpan(i.getDrawable()), s, e, f);
+                }
             }
         }
+            
+        CenteredImageSpan[] spans = b.getSpans(0, b.length(), CenteredImageSpan.class);
+        for(CenteredImageSpan spn : spans){
+            if(b.getSpanStart(spn) == 0){
+                b.insert(0, " ");
+                break;
+            }
+        }
+        
         if(b.length() > 0){
-            int first = 0;
             int last = b.length() - 1;
-            while(Character.isWhitespace(b.charAt(first)) && first < last && first < firstImg) first++;
-            while(Character.isWhitespace(b.charAt(last)) && last > first && last > lastImg) last--;
-            return new SpannableStringBuilder(b.subSequence(first, last + 1));
+            while(Character.isWhitespace(b.charAt(last)) && last > lastImg) last--;
+            
+            SpannableStringBuilder spb = new SpannableStringBuilder(b.subSequence(0, last + 1));
+            return spb;
         } else {
             return b;
         }
