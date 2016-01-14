@@ -5,19 +5,16 @@
  */
 package com.hitkoDev.chemApp.fragment;
 
-import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
-import android.support.v7.app.AppCompatActivity;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.RecyclerView.LayoutManager;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.util.TypedValue;
 import android.view.KeyEvent;
@@ -30,6 +27,7 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
@@ -37,6 +35,7 @@ import com.hitkoDev.chemApp.ChemApp;
 import com.hitkoDev.chemApp.MainActivity;
 import com.hitkoDev.chemApp.R;
 import com.hitkoDev.chemApp.data.Exercise;
+import com.hitkoDev.chemApp.data.Exercise.OnExerciseValidatedListener;
 import com.hitkoDev.chemApp.data.LoadedDrawable;
 import com.hitkoDev.chemApp.data.Section;
 import com.hitkoDev.chemApp.helper.FragmentActionsListener;
@@ -61,11 +60,14 @@ public class ExerciseFragment extends Fragment {
     private StaggeredGridLayoutManager layoutManager;
     private RecyclerView recyclerView;
     
+    private final String SELECTED_EXERCISE_NUMBER = "ChemApp.Exercise.Selected";
+    
     private int exerciseNumber = -1;
     private ArrayList<Exercise> exercises = new ArrayList();
     private int loadedSection;
     private Exercise exercise;
     private FloatingActionButton action;
+    private FloatingActionButton next;
     private RecyclerView.Adapter adapter;
     private Section section;
     
@@ -92,6 +94,11 @@ public class ExerciseFragment extends Fragment {
     public void onCreate(Bundle bundle) {
         super.onCreate(bundle); //To change body of generated methods, choose Tools | Templates.
         setRetainInstance(true);
+        if(bundle != null){
+            exerciseNumber = bundle.getInt(SELECTED_EXERCISE_NUMBER, -1);
+        } else {
+            exerciseNumber = -1;
+        }
     }
     
     @Override
@@ -104,7 +111,7 @@ public class ExerciseFragment extends Fragment {
         
         int d = getResources().getDimensionPixelSize(R.dimen.letter_tile_size);
         tileDimensions = new ImageCanvas.Dimensions(d, d, 1, getResources().getDimensionPixelSize(R.dimen.tile_letter_font_size_medium));
-        tileProvider = new LetterTileProvider(getResources());
+        tileProvider = new LetterTileProvider(getContext());
         tileProvider.noCache = true;
         
         action = (FloatingActionButton) v.findViewById(R.id.exercise_action);
@@ -114,6 +121,17 @@ public class ExerciseFragment extends Fragment {
                 checkAnswers();
             }
         });
+        
+        next = (FloatingActionButton) v.findViewById(R.id.exercise_next);
+        next.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(exerciseNumber + 1 < exercises.size()) showExercise(exerciseNumber + 1);
+            }
+        });
+        
+        action.setVisibility(View.GONE);
+        next.setVisibility(View.GONE);
         
         recyclerView = (RecyclerView) v.findViewById(R.id.exercise_recycler_view);
         
@@ -128,9 +146,9 @@ public class ExerciseFragment extends Fragment {
         super.onStart();
         final int section = settings.getInt("section", 0);
         
-        exerciseNumber = -1;
         if(section > 0){
             if(section != loadedSection) {
+                exerciseNumber = -1;
                 if(getContext() != null) new LoadDataTask(getContext(), new OnJSONResponseListener() {
                     @Override
                     public void onSuccess(JSONObject response) {
@@ -194,7 +212,7 @@ public class ExerciseFragment extends Fragment {
                     }
                 }).execute("section", section+"");
             } else {
-                if(!exercises.isEmpty()) showExercise(0);
+                if(!exercises.isEmpty()) showExercise(exerciseNumber);
                 setHeader();
             }
         }
@@ -211,10 +229,20 @@ public class ExerciseFragment extends Fragment {
     }
     
     public void checkAnswers() {
-        if(exerciseNumber + 1 < exercises.size()) showExercise(exerciseNumber + 1);
+        action.setVisibility(View.GONE);
+        next.setVisibility(exerciseNumber + 1 < exercises.size() ? View.VISIBLE : View.GONE);
+        exercise.validate(getContext(), new OnExerciseValidatedListener() {
+            @Override
+            public void OnExerciseValidated() {
+                recyclerView.getAdapter().notifyDataSetChanged();
+            }
+        });
     }
     
     public void showExercise(int ex){
+        
+        action.setVisibility(View.VISIBLE);
+        next.setVisibility(View.GONE);
         
         exerciseNumber = ex;
         exercise = exercises.get(exerciseNumber);
@@ -236,12 +264,20 @@ public class ExerciseFragment extends Fragment {
         TextView content;
         Exercise.Select.Answer ans;
         LinearLayout wrap;
+        LinearLayout explanationWrap;
+        ImageView explIcon;
+        TextView explanation;
+        TextView answerExplained;
         
         public AnswerHolder(View v, final Exercise.Select ex) {
             super(v);
             view = v;
             wrap = (LinearLayout) v.findViewById(R.id.exercise_answer_wrap);
             answer = (CompoundButton) v.findViewById(R.id.exercise_answer);
+            explanationWrap = (LinearLayout) v.findViewById(R.id.exercise_answer_explanation);
+            explIcon = (ImageView) v.findViewById(R.id.exercise_valid_icon);
+            explanation = (TextView) v.findViewById(R.id.exercise_explanation);
+            answerExplained = (TextView) v.findViewById(R.id.exercise_explanation_answer);
             answer.setOnCheckedChangeListener(new OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -292,16 +328,27 @@ public class ExerciseFragment extends Fragment {
                 vh.answer.setVisibility(View.GONE);
                 
                 vh.wrap.setPadding(marginFull, marginFull, marginFull, marginItems);
-                
+                vh.explanationWrap.setVisibility(View.GONE);
             } else {
                 Exercise.Select.Answer a = exercise.getAnswers().get(i-1);
                 vh.ans = a;
-                vh.answer.setText(a.getAnswerParsed());
-                vh.answer.setChecked(a.selected);
-                vh.answer.setVisibility(View.VISIBLE);
-                vh.content.setVisibility(View.GONE);
                 
+                vh.content.setVisibility(View.GONE);
                 vh.wrap.setPadding(marginFull, marginItems, marginFull, i == exercise.getAnswers().size() ? marginFull : marginItems);
+                
+                if(a.showExplanation){
+                    vh.answer.setVisibility(View.GONE);
+                    vh.explanation.setText(a.getExplanationParsed());
+                    vh.explIcon.setImageResource(a.correctAnswer ? R.drawable.ic_correct : R.drawable.ic_incorrect);
+                    vh.explanationWrap.setVisibility(View.VISIBLE);
+                    vh.answerExplained.setText(a.getAnswerParsed());
+                    vh.answerExplained.setTextColor(ContextCompat.getColor(getContext(), a.correctAnswer ? R.color.correct : R.color.incorrect));
+                } else {
+                    vh.answer.setVisibility(View.VISIBLE);
+                    vh.answer.setText(a.getAnswerParsed());
+                    vh.answer.setChecked(a.selected);
+                    vh.explanationWrap.setVisibility(View.GONE);
+                }
             }
         }
 
@@ -401,6 +448,12 @@ public class ExerciseFragment extends Fragment {
             return exercise.getFields().size() + 1;
         }
         
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if(outState != null) outState.putInt(SELECTED_EXERCISE_NUMBER, exerciseNumber);
     }
     
 }

@@ -5,13 +5,11 @@
  */
 package com.hitkoDev.chemApp.fragment;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -92,7 +90,7 @@ public class SectionsFragment extends Fragment {
         paddingH = getResources().getDimensionPixelSize(R.dimen.activity_horizontal_margin);
         paddingV = getResources().getDimensionPixelSize(R.dimen.activity_vertical_margin);
         offsetPadding = getResources().getDimensionPixelSize(R.dimen.list_item_indent);
-        tileProvider = new LetterTileProvider(getResources());
+        tileProvider = new LetterTileProvider(getContext());
         tileProvider.noCache = true;
         
         return v;

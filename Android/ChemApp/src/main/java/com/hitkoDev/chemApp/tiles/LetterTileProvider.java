@@ -15,9 +15,8 @@
  */
 package com.hitkoDev.chemApp.tiles;
 
-import android.content.res.Resources;
+import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Paint.Align;
@@ -52,13 +51,13 @@ public class LetterTileProvider {
     private static final int POSSIBLE_BITMAP_SIZES = 3;
     private final ColorPicker mTileColorPicker;
     public boolean noCache = false;
-    public LetterTileProvider(Resources res) {
-        this(res, new ColorPicker.PaletteColorPicker(res));
+    public LetterTileProvider(Context c) {
+        this(c, new ColorPicker.PaletteColorPicker(c));
     }
-    public LetterTileProvider(Resources res, ColorPicker colorPicker) {
-        mTileLetterFontSize = res.getDimensionPixelSize(R.dimen.tile_letter_font_size_medium);
-        mTileLetterFontSizeSmall = res.getDimensionPixelSize(R.dimen.tile_letter_font_size_small);
-        mTileFontColor = res.getColor(R.color.letter_tile_font_color);
+    public LetterTileProvider(Context c, ColorPicker colorPicker) {
+        mTileLetterFontSize = c.getResources().getDimensionPixelSize(R.dimen.tile_letter_font_size_medium);
+        mTileLetterFontSizeSmall = c.getResources().getDimensionPixelSize(R.dimen.tile_letter_font_size_small);
+        mTileFontColor = c.getResources().getColor(R.color.letter_tile_font_color);
         mSansSerifLight = Typeface.create("sans-serif-light", Typeface.NORMAL);
         mBounds = new Rect();
         mPaint.setTypeface(mSansSerifLight);
@@ -66,7 +65,7 @@ public class LetterTileProvider {
         mPaint.setTextAlign(Align.CENTER);
         mPaint.setAntiAlias(true);
         mBitmapBackgroundCache = new Bitmap[POSSIBLE_BITMAP_SIZES];
-        mDefaultDrawable = res.getDrawable(R.drawable.ic_tile_generic);
+        mDefaultDrawable = c.getResources().getDrawable(R.drawable.ic_tile_generic);
         mTileColorPicker = colorPicker;
     }
     public Bitmap makeCircle(final Dimensions dimensions, Bitmap input) {

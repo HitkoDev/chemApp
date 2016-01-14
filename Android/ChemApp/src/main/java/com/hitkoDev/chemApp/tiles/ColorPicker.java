@@ -16,8 +16,10 @@
  */
 package com.hitkoDev.chemApp.tiles;
 
+import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
+import android.support.v4.content.ContextCompat;
 import com.hitkoDev.chemApp.R;
 
 public interface ColorPicker {
@@ -49,11 +51,11 @@ public interface ColorPicker {
          */
         private static int sDefaultColor;
 
-        public PaletteColorPicker(Resources res) {
+        public PaletteColorPicker(Context c) {
             if (sColors == null) {
-                sColors = res.obtainTypedArray(R.array.letter_tile_colors);
+                sColors = c.getResources().obtainTypedArray(R.array.letter_tile_colors);
                 sColorCount = sColors.length();
-                sDefaultColor = res.getColor(R.color.letter_tile_default_color);
+                sDefaultColor = ContextCompat.getColor(c, R.color.letter_tile_default_color);
             }
         }
 

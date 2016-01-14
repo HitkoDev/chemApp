@@ -85,7 +85,7 @@ public class LessonsFragment extends Fragment {
         
         int d = getResources().getDimensionPixelSize(R.dimen.letter_tile_size);
         tileDimensions = new ImageCanvas.Dimensions(d, d, 1, getResources().getDimensionPixelSize(R.dimen.tile_letter_font_size_medium));
-        tileProvider = new LetterTileProvider(getResources());
+        tileProvider = new LetterTileProvider(getContext());
         tileProvider.noCache = true;
         
         recyclerView = (RecyclerView) v.findViewById(R.id.lesson_recycler_view);

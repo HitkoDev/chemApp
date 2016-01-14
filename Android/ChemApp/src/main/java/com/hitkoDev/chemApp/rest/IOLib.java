@@ -5,6 +5,7 @@
  */
 package com.hitkoDev.chemApp.rest;
 
+import com.squareup.okhttp.MediaType;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,6 +21,8 @@ import java.util.logging.Logger;
  * @author hitno
  */
 public class IOLib {
+    
+    public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     
     public static String md5(String s){
         try {

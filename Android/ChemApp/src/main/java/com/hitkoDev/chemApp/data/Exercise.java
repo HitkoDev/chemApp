@@ -10,8 +10,12 @@ import android.text.Html;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.style.ImageSpan;
+import com.hitkoDev.chemApp.rest.OnJSONResponseListener;
+import com.hitkoDev.chemApp.rest.SendJSONDataTask;
 import com.hitkoDev.chemApp.rest.TextImageGetter;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -20,7 +24,7 @@ import org.json.JSONObject;
  *
  * @author hitno
  */
-public class Exercise {
+public abstract class Exercise {
     
     private int id;
     private String name;
@@ -45,6 +49,10 @@ public class Exercise {
     public Spanned getContentParsed() {
         return contentParsed;
     }
+    
+    public abstract String getPostString();
+    
+    public abstract void validate(Context c, OnExerciseValidatedListener l);
     
     public static class Select extends Exercise {
         
@@ -92,6 +100,60 @@ public class Exercise {
         public ArrayList<Answer> getAnswers() {
             return answers;
         }
+
+        @Override
+        public String getPostString() {
+            JSONObject o = new JSONObject();
+            JSONObject f = new JSONObject();
+            for(Answer a : answers) a.putData(f);
+            
+            try {
+                o.put("id", super.id);
+            } catch (JSONException ex) {
+                Logger.getLogger(Exercise.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            try {
+                o.put("fields", f);
+            } catch (JSONException ex) {
+                Logger.getLogger(Exercise.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+            return o.toString();
+        }
+
+        @Override
+        public void validate(Context c, final OnExerciseValidatedListener l) {
+            new SendJSONDataTask(c, new OnJSONResponseListener() {
+                @Override
+                public void onSuccess(JSONObject response) {
+                    try {
+                        JSONObject f = response.getJSONObject("object").getJSONObject("fields");
+                        for(Answer a : answers){
+                            try {
+                                if(f.has(a.id + "")){
+                                    a.correctAnswer = f.getBoolean(a.id + "");
+                                    a.showExplanation = true;
+                                } else {
+                                    a.showExplanation = false;
+                                }
+                            } catch (JSONException ex) {
+                                Logger.getLogger(Exercise.class.getName()).log(Level.SEVERE, null, ex);
+                                a.showExplanation = false;
+                            }
+                        }
+                    } catch (JSONException ex) {
+                        Logger.getLogger(Exercise.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    l.OnExerciseValidated();
+                }
+
+                @Override
+                public void onFail(String response) {
+                    System.out.println(response);
+                    l.OnExerciseValidated();
+                }
+            }).execute(getPostString(), "validate");
+        }
         
         public class Answer implements AutoCloseable {
             
@@ -103,6 +165,8 @@ public class Exercise {
             private Spanned explanationParsed;
             private String classKey;
             public boolean selected;
+            public boolean showExplanation = false;
+            public boolean correctAnswer = false;
             
             private Answer(JSONObject o) throws JSONException {
                 if(o.has("id")) id = o.getInt("id");
@@ -138,6 +202,14 @@ public class Exercise {
                 
             }
             
+            private void putData(JSONObject o){
+                try {
+                    o.put(this.id + "", selected);
+                } catch (JSONException ex) {
+                    Logger.getLogger(Exercise.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            
         }
         
     }
@@ -147,11 +219,13 @@ public class Exercise {
         private ArrayList<Field> fields = new ArrayList();
         private String explanation;
         private Spanned explanationParsed;
+        private int inputsGroup;
 
         public Input(JSONObject o, Context c, LoadedDrawable.OnDrawableUpdatedListener l, final OnFieldUpdatedListener fl) throws JSONException {
             super(o, c, l);
             TextImageGetter g = new TextImageGetter(c, l);
             if(o.has("explanation")) explanation = o.getString("explanation");
+            if(o.has("inputs_group")) inputsGroup = o.getInt("inputs_group");
             if(explanation != null) explanationParsed = Lesson.centerImages(Html.fromHtml(explanation, g, null));
             JSONArray answ = o.getJSONArray("input");
             for(int i = 0; i < answ.length(); i++){
@@ -185,12 +259,26 @@ public class Exercise {
             }
         }
 
+        public int getInputsGroup() {
+            return inputsGroup;
+        }
+
         public ArrayList<Field> getFields() {
             return fields;
         }
 
         public Spanned getExplanationParsed() {
             return explanationParsed;
+        }
+
+        @Override
+        public String getPostString() {
+            return "";
+        }
+
+        @Override
+        public void validate(Context c, OnExerciseValidatedListener l) {
+            l.OnExerciseValidated();
         }
         
         public class Field implements AutoCloseable {
@@ -230,6 +318,12 @@ public class Exercise {
             }
             
         }
+        
+    }
+
+    public interface OnExerciseValidatedListener {
+        
+        public void OnExerciseValidated();
         
     }
         

@@ -22,4 +22,44 @@
         android:layout_height="wrap_content"
         android:textAppearance="@style/TextAppearance.AppCompat.Body1" />
     
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/exercise_answer_explanation"
+        android:gravity="top"
+        android:orientation="vertical">
+    
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/exercise_answer_explanation"
+            android:gravity="center_vertical"
+            android:padding="@dimen/icon_external_pading"
+            android:orientation="horizontal">
+        
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_incorrect"
+                android:id="@+id/exercise_valid_icon"
+                android:paddingRight="@dimen/icon_external_pading" />
+
+            <TextView 
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+                android:id="@+id/exercise_explanation_answer" />
+        
+        </LinearLayout>
+    
+        <TextView 
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+            android:id="@+id/exercise_explanation"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp" />
+        
+    </LinearLayout>
+    
 </LinearLayout>
