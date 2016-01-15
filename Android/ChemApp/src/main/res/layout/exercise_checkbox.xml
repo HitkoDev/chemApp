@@ -32,7 +32,6 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/exercise_answer_explanation"
             android:gravity="center_vertical"
             android:padding="@dimen/icon_external_pading"
             android:orientation="horizontal">

@@ -9,6 +9,7 @@
     <color name="white_opaque">#FFFFFFFF</color>
     <color name="correct">#FF388E3C</color>
     <color name="incorrect">#FFD32F2F</color>
+    <color name="partially_correct">#FFFFA000</color>
     
     <array name="letter_tile_colors">
         <item>#ffdb4437</item>

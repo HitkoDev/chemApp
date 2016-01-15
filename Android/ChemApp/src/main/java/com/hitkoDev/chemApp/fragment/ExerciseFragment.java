@@ -6,16 +6,22 @@
 package com.hitkoDev.chemApp.fragment;
 
 import android.app.ActivityManager;
+import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -233,19 +239,38 @@ public class ExerciseFragment extends Fragment {
         next.setVisibility(exerciseNumber + 1 < exercises.size() ? View.VISIBLE : View.GONE);
         exercise.validate(getContext(), new OnExerciseValidatedListener() {
             @Override
-            public void OnExerciseValidated() {
+            public void OnExerciseValidated(String status) {
                 recyclerView.getAdapter().notifyDataSetChanged();
+                if(exercise.getClass() == Exercise.Input.class){
+                    Exercise.Input ex = (Exercise.Input) exercise;
+                    String expl = ex.getExplanationParsed().toString().trim();
+                    if(!expl.isEmpty()){
+                        new AlertDialog.Builder(getContext())
+                                .setMessage(ex.getExplanationParsed())
+                                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.dismiss();
+                                    }
+                                })
+                                .setIcon(status.equals("correct") ? R.drawable.ic_correct : (status.equals("incorrect") ? R.drawable.ic_incorrect : R.drawable.ic_partially_correct))
+                                .show();
+                    }
+                }
             }
         });
     }
     
     public void showExercise(int ex){
-        
-        action.setVisibility(View.VISIBLE);
-        next.setVisibility(View.GONE);
-        
         exerciseNumber = ex;
         exercise = exercises.get(exerciseNumber);
+        
+        if(exercise.isValidated()){
+            action.setVisibility(View.GONE);
+            next.setVisibility(exerciseNumber + 1 < exercises.size() ? View.VISIBLE : View.GONE);
+        } else {
+            action.setVisibility(View.VISIBLE);
+            next.setVisibility(View.GONE);
+        }
         
         if(exercise.getClass() == Exercise.Select.class){
             adapter = new AnswerAdapter(exercise);
@@ -366,6 +391,7 @@ public class ExerciseFragment extends Fragment {
         EditText input;
         Exercise.Input.Field field;
         LinearLayout wrap;
+        ColorStateList original;
         
         public InputHolder(View v, final Exercise.Input ex) {
             super(v);
@@ -373,9 +399,20 @@ public class ExerciseFragment extends Fragment {
             input = (EditText) v.findViewById(R.id.exercise_input);
             content = (TextView) v.findViewById(R.id.exercise_text);
             wrap = (LinearLayout) v.findViewById(R.id.exercise_input_wrap);
-            input.setOnFocusChangeListener(new OnFocusChangeListener() {
+            original = input.getTextColors();
+            input.addTextChangedListener(new TextWatcher() {
                 @Override
-                public void onFocusChange(View v, boolean hasFocus) {
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                    
+                }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
                     if(field != null) field.value = input.getText().toString();
                 }
             });
@@ -428,6 +465,12 @@ public class ExerciseFragment extends Fragment {
                 vh.input.setVisibility(View.VISIBLE);
                 vh.input.setText(fl.value);
                 
+                if(fl.isValidated()){
+                    vh.input.setTextColor(ContextCompat.getColor(getContext(), fl.isCorrect() ? R.color.correct : R.color.incorrect));
+                } else {
+                    vh.input.setTextColor(vh.original);
+                }
+                
                 if(i == exercise.getFields().size()){
                     vh.input.setImeOptions(EditorInfo.IME_ACTION_DONE);
                     vh.input.setOnEditorActionListener(done);
@@ -437,6 +480,26 @@ public class ExerciseFragment extends Fragment {
                     vh.input.setImeOptions(EditorInfo.IME_ACTION_NEXT);
                     vh.input.setOnEditorActionListener(null);
                     vh.wrap.setPadding(marginFull, marginItems, marginFull, marginItems);
+                }
+                
+                switch(fl.getType()){
+                    case "number":
+                    case "int":
+                        vh.input.setInputType(EditorInfo.TYPE_CLASS_NUMBER|EditorInfo.TYPE_NUMBER_FLAG_SIGNED);
+                        break;
+                    case "uint":
+                        vh.input.setInputType(EditorInfo.TYPE_CLASS_NUMBER);
+                        break;
+                    case "float":
+                        vh.input.setInputType(EditorInfo.TYPE_CLASS_NUMBER|EditorInfo.TYPE_NUMBER_FLAG_SIGNED|EditorInfo.TYPE_NUMBER_FLAG_DECIMAL);
+                        break;
+                    case "ufloat":
+                        vh.input.setInputType(EditorInfo.TYPE_CLASS_NUMBER|EditorInfo.TYPE_NUMBER_FLAG_DECIMAL);
+                        break;
+                    case "text":
+                    default:
+                        vh.input.setInputType(EditorInfo.TYPE_CLASS_TEXT|EditorInfo.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+                        break;
                 }
                 vh.content.setVisibility(View.GONE);
             }

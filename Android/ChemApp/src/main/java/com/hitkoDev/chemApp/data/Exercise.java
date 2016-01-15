@@ -14,6 +14,7 @@ import com.hitkoDev.chemApp.rest.OnJSONResponseListener;
 import com.hitkoDev.chemApp.rest.SendJSONDataTask;
 import com.hitkoDev.chemApp.rest.TextImageGetter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.json.JSONArray;
@@ -31,6 +32,11 @@ public abstract class Exercise {
     private String content;
     private String classKey;
     private Spanned contentParsed;
+    private boolean validated = false;
+
+    public boolean isValidated() {
+        return validated;
+    }
     
     public Exercise(JSONObject o) throws JSONException {
         if(o.has("id")) id = o.getInt("id");
@@ -144,13 +150,19 @@ public abstract class Exercise {
                     } catch (JSONException ex) {
                         Logger.getLogger(Exercise.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                    l.OnExerciseValidated();
+                    Exercise.Select.super.validated = true;
+                    try {
+                        l.OnExerciseValidated(response.getJSONObject("object").getString("status"));
+                    } catch (JSONException ex) {
+                        l.OnExerciseValidated("");
+                        Logger.getLogger(Exercise.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 }
 
                 @Override
                 public void onFail(String response) {
                     System.out.println(response);
-                    l.OnExerciseValidated();
+                    l.OnExerciseValidated("");
                 }
             }).execute(getPostString(), "validate");
         }
@@ -273,12 +285,65 @@ public abstract class Exercise {
 
         @Override
         public String getPostString() {
-            return "";
+            JSONObject o = new JSONObject();
+            JSONObject f = new JSONObject();
+            for(Field fl : fields) fl.putData(f);
+            
+            try {
+                o.put("id", super.id);
+                o.put("inputs_group", this.inputsGroup);
+            } catch (JSONException ex) {
+                Logger.getLogger(Exercise.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            try {
+                o.put("fields", f);
+            } catch (JSONException ex) {
+                Logger.getLogger(Exercise.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+            return o.toString();
         }
 
         @Override
-        public void validate(Context c, OnExerciseValidatedListener l) {
-            l.OnExerciseValidated();
+        public void validate(Context c, final OnExerciseValidatedListener l) {
+            new SendJSONDataTask(c, new OnJSONResponseListener() {
+                @Override
+                public void onSuccess(JSONObject response) {
+                    try {
+                        JSONObject f = response.getJSONObject("object").getJSONObject("fields");
+                        System.out.println(response);
+                        for(Field fl : fields){
+                            try {
+                                if(f.has(fl.name)){
+                                    fl.correctAnswer = f.getBoolean(fl.name);
+                                    fl.validated = true;
+                                } else {
+                                    fl.validated = false;
+                                }
+                            } catch (JSONException ex) {
+                                Logger.getLogger(Exercise.class.getName()).log(Level.SEVERE, null, ex);
+                                fl.validated = false;
+                            }
+                        }
+                    } catch (JSONException ex) {
+                        Logger.getLogger(Exercise.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    Exercise.Input.super.validated = true;
+                    try {
+                        l.OnExerciseValidated(response.getJSONObject("object").getString("status"));
+                    } catch (JSONException ex) {
+                        l.OnExerciseValidated("");
+                        Logger.getLogger(Exercise.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+
+                @Override
+                public void onFail(String response) {
+                    System.out.println(response);
+                    l.OnExerciseValidated("");
+                }
+            }).execute(getPostString(), "validate");
+            System.out.println(getPostString());
         }
         
         public class Field implements AutoCloseable {
@@ -289,6 +354,16 @@ public abstract class Exercise {
             private Spanned labelParsed;
             private String type;
             public String value = "";
+            private boolean validated = false;
+            private boolean correctAnswer = false;
+
+            public boolean isCorrect() {
+                return correctAnswer;
+            }
+
+            public boolean isValidated() {
+                return validated;
+            }
             
             private Field(JSONObject o) throws JSONException {
                 if(o.has("id")) id = o.getInt("id");
@@ -317,13 +392,42 @@ public abstract class Exercise {
                 
             }
             
+            private void putData(JSONObject o){
+                try {
+                    value = value.trim();
+                    if(!value.isEmpty()){
+                        switch(this.type){
+                            case "number":
+                            case "int":
+                                o.put(this.name, Integer.parseInt(value));
+                                break;
+                            case "uint":
+                                o.put(this.name, Integer.parseInt(value));
+                                break;
+                            case "float":
+                                o.put(this.name, Float.parseFloat(value));
+                                break;
+                            case "ufloat":
+                                o.put(this.name, Float.parseFloat(value));
+                                break;
+                            case "text":
+                            default:
+                                o.put(this.name, value);
+                                break;
+                        }
+                    }
+                } catch (Exception ex) {
+                    Logger.getLogger(Exercise.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            
         }
         
     }
 
     public interface OnExerciseValidatedListener {
         
-        public void OnExerciseValidated();
+        public void OnExerciseValidated(String status);
         
     }
         
