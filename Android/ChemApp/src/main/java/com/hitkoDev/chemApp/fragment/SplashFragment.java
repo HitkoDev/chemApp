@@ -22,30 +22,32 @@ import com.hitkoDev.chemApp.helper.FragmentActionsListener;
  * @author hitno
  */
 public class SplashFragment extends Fragment {
-    
+
     private Button continueLearning;
     private Button takeExam;
     private SharedPreferences settings;
     private SharedPreferences.Editor prefEditor;
     private FragmentActionsListener listener;
-    
+
     @Override
     public View onCreateView(LayoutInflater li, ViewGroup vg, Bundle bundle) {
-        
+
         settings = getContext().getSharedPreferences(ChemApp.PREF_NAME, 0);
         prefEditor = settings.edit();
-        
+
         View v = li.inflate(R.layout.layout_splash, vg, false);
         continueLearning = (Button) v.findViewById(R.id.button_continue_learning);
         takeExam = (Button) v.findViewById(R.id.button_take_exam);
-        
+
         return v;
     }
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if(context instanceof FragmentActionsListener) listener = (FragmentActionsListener) context;
+        if (context instanceof FragmentActionsListener) {
+            listener = (FragmentActionsListener) context;
+        }
     }
 
     @Override
@@ -59,7 +61,9 @@ public class SplashFragment extends Fragment {
         super.onStart();
         continueLearning.setEnabled(settings.getInt("section", 0) > 0);
         takeExam.setEnabled(settings.getInt("level", 0) > 0);
-        if(listener != null) listener.setFragmentDescription(getContext().getString(R.string.app_name));
+        if (listener != null) {
+            listener.setFragmentDescription(getContext().getString(R.string.app_name));
+        }
     }
 
     @Override
@@ -67,5 +71,5 @@ public class SplashFragment extends Fragment {
         super.onCreate(bundle); //To change body of generated methods, choose Tools | Templates.
         setRetainInstance(true);
     }
-    
+
 }

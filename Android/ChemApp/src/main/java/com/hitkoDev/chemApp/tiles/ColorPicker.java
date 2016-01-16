@@ -17,15 +17,16 @@
 package com.hitkoDev.chemApp.tiles;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.support.v4.content.ContextCompat;
 import com.hitkoDev.chemApp.R;
 
 public interface ColorPicker {
+
     /**
-     * Returns the color to use for the given email address.
-     * This method should return the same output for the same input.
+     * Returns the color to use for the given email address. This method should
+     * return the same output for the same input.
+     *
      * @param email The normalized email address.
      * @return The color value in the format {@code 0xAARRGGBB}.
      */
@@ -35,8 +36,10 @@ public interface ColorPicker {
      * A simple implementation of a {@link ColorPicker}.
      */
     public class PaletteColorPicker implements ColorPicker {
+
         /**
-         * The palette of colors, inflated from {@code R.array.letter_tile_colors}.
+         * The palette of colors, inflated from
+         * {@code R.array.letter_tile_colors}.
          */
         private static TypedArray sColors;
 
@@ -46,8 +49,9 @@ public interface ColorPicker {
         private static int sColorCount;
 
         /**
-         * Default color returned if the one chosen from {@code R.array.letter_tile_colors} is
-         * a {@link android.content.res.ColorStateList}.
+         * Default color returned if the one chosen from
+         * {@code R.array.letter_tile_colors} is a
+         * {@link android.content.res.ColorStateList}.
          */
         private static int sDefaultColor;
 

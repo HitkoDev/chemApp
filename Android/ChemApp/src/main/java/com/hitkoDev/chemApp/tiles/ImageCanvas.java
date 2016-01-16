@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.hitkoDev.chemApp.tiles;
 
 import android.graphics.Bitmap;
@@ -28,6 +27,7 @@ public interface ImageCanvas {
      * placed in the ImageCanvas.
      */
     public static class Dimensions {
+
         public int width;
         public int height;
         public float scale;
@@ -58,8 +58,9 @@ public interface ImageCanvas {
     }
 
     /**
-     * Draw/composite the given Bitmap corresponding with the key 'id'. It will be sized according
-     * to whatever {@link #getDesiredDimensions(Object, Dimensions)} reported when the
+     * Draw/composite the given Bitmap corresponding with the key 'id'. It will
+     * be sized according to whatever
+     * {@link #getDesiredDimensions(Object, Dimensions)} reported when the
      * decode request was made.
      *
      * @param decoded an exactly-sized, decoded bitmap to display
@@ -73,21 +74,24 @@ public interface ImageCanvas {
     void reset();
 
     /**
-     * Outputs the desired dimensions that the object with key 'id' would like to be drawn to.
+     * Outputs the desired dimensions that the object with key 'id' would like
+     * to be drawn to.
      *
      * @param key
-     * @param outDim caller-allocated {@link Dimensions} object to house the result
+     * @param outDim caller-allocated {@link Dimensions} object to house the
+     * result
      */
     void getDesiredDimensions(Object key, Dimensions outDim);
 
     /**
-     * Return an arbitrary integer to associate with any asynchronous requests for images that
-     * currently belong to this canvas. If, later on when results are available, the generation
-     * that is then reported does not match, the photo manager will assume the image is no longer
-     * desired and will not offer the image.
+     * Return an arbitrary integer to associate with any asynchronous requests
+     * for images that currently belong to this canvas. If, later on when
+     * results are available, the generation that is then reported does not
+     * match, the photo manager will assume the image is no longer desired and
+     * will not offer the image.
      * <p>
-     * Implementors should basically treat this as a counter to increment upon reset() or
-     * data binding.
+     * Implementors should basically treat this as a counter to increment upon
+     * reset() or data binding.
      */
     int getGeneration();
 }

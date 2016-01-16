@@ -23,7 +23,7 @@ import com.hitkoDev.chemApp.helper.WidthImageSpan;
  * @author hitno
  */
 public class Lesson {
-    
+
     private int id;
     private String name;
     private String content;
@@ -31,36 +31,58 @@ public class Lesson {
     private Spanned nameParsed;
     private Spanned contentParsed;
     private Drawable imageContent;
-    
+
     public Lesson(JSONObject o) throws JSONException {
-        if(o.has("id")) id = o.getInt("id");
-        if(o.has("name")) name = o.getString("name");
-        if(o.has("content")) content = o.getString("content");
-        if(o.has("class_key")) classKey = o.getString("class_key");
-        if(name != null) nameParsed = centerImages(Html.fromHtml(name));
-        if(content != null) contentParsed = centerImages(Html.fromHtml(content));
+        if (o.has("id")) {
+            id = o.getInt("id");
+        }
+        if (o.has("name")) {
+            name = o.getString("name");
+        }
+        if (o.has("content")) {
+            content = o.getString("content");
+        }
+        if (o.has("class_key")) {
+            classKey = o.getString("class_key");
+        }
+        if (name != null) {
+            nameParsed = centerImages(Html.fromHtml(name));
+        }
+        if (content != null) {
+            contentParsed = centerImages(Html.fromHtml(content));
+        }
     }
-    
+
     public Lesson(JSONObject o, Context c, OnDrawableUpdatedListener l) throws JSONException {
         this(o);
         TextImageGetter g = new TextImageGetter(c, l);
-        if(name != null) nameParsed = centerImages(Html.fromHtml(name, g, null));
-        if(content != null) contentParsed = centerImages(Html.fromHtml(content, g, null));
-        if(classKey != null && classKey.equals("caImage")) imageContent = g.getDrawable(content);
+        if (name != null) {
+            nameParsed = centerImages(Html.fromHtml(name, g, null));
+        }
+        if (content != null) {
+            contentParsed = centerImages(Html.fromHtml(content, g, null));
+        }
+        if (classKey != null && classKey.equals("caImage")) {
+            imageContent = g.getDrawable(content);
+        }
     }
-    
-    public static Spanned centerImages(Spanned sp){
+
+    public static Spanned centerImages(Spanned sp) {
         SpannableStringBuilder b = new SpannableStringBuilder(sp);
         ImageSpan[] img = b.getSpans(0, sp.length(), ImageSpan.class);
         int firstImg = b.length() - 1;
         int lastImg = 0;
-        for(ImageSpan i : img) {
+        for (ImageSpan i : img) {
             int s = b.getSpanStart(i);
             int e = b.getSpanEnd(i);
-            if(s < firstImg) firstImg = s;
-            if(e > lastImg) lastImg = e;
-            if(i.getDrawable().getClass() == LoadedDrawable.class) {
-                if(((LoadedDrawable)i.getDrawable()).isFormula()){
+            if (s < firstImg) {
+                firstImg = s;
+            }
+            if (e > lastImg) {
+                lastImg = e;
+            }
+            if (i.getDrawable().getClass() == LoadedDrawable.class) {
+                if (((LoadedDrawable) i.getDrawable()).isFormula()) {
                     int f = b.getSpanFlags(i);
                     b.removeSpan(i);
                     b.setSpan(new CenteredImageSpan(i.getDrawable()), s, e, f);
@@ -71,19 +93,21 @@ public class Lesson {
                 }
             }
         }
-            
+
         CenteredImageSpan[] spans = b.getSpans(0, b.length(), CenteredImageSpan.class);
-        for(CenteredImageSpan spn : spans){
-            if(b.getSpanStart(spn) == 0){
+        for (CenteredImageSpan spn : spans) {
+            if (b.getSpanStart(spn) == 0) {
                 b.insert(0, " ");
                 break;
             }
         }
-        
-        if(b.length() > 0){
+
+        if (b.length() > 0) {
             int last = b.length() - 1;
-            while(Character.isWhitespace(b.charAt(last)) && last > lastImg) last--;
-            
+            while (Character.isWhitespace(b.charAt(last)) && last > lastImg) {
+                last--;
+            }
+
             SpannableStringBuilder spb = new SpannableStringBuilder(b.subSequence(0, last + 1));
             return spb;
         } else {
@@ -94,7 +118,7 @@ public class Lesson {
     public Drawable getImageContent() {
         return imageContent;
     }
-    
+
     public String getName() {
         return name;
     }
@@ -114,5 +138,5 @@ public class Lesson {
     public Spanned getNameParsed() {
         return nameParsed;
     }
-    
+
 }

@@ -29,6 +29,7 @@ import android.text.TextPaint;
 import android.text.TextUtils;
 import com.hitkoDev.chemApp.R;
 import com.hitkoDev.chemApp.tiles.ImageCanvas.Dimensions;
+
 /**
  * LetterTileProvider is an implementation of the DefaultImageProvider. When no
  * matching contact photo is found, and there is a supplied displayName or email
@@ -38,6 +39,7 @@ import com.hitkoDev.chemApp.tiles.ImageCanvas.Dimensions;
  * bitmap with the default contact avatar.
  */
 public class LetterTileProvider {
+
     private final Drawable mDefaultDrawable;
     private final Bitmap[] mBitmapBackgroundCache;
     private final Typeface mSansSerifLight;
@@ -51,9 +53,11 @@ public class LetterTileProvider {
     private static final int POSSIBLE_BITMAP_SIZES = 3;
     private final ColorPicker mTileColorPicker;
     public boolean noCache = false;
+
     public LetterTileProvider(Context c) {
         this(c, new ColorPicker.PaletteColorPicker(c));
     }
+
     public LetterTileProvider(Context c, ColorPicker colorPicker) {
         mTileLetterFontSize = c.getResources().getDimensionPixelSize(R.dimen.tile_letter_font_size_medium);
         mTileLetterFontSizeSmall = c.getResources().getDimensionPixelSize(R.dimen.tile_letter_font_size_small);
@@ -68,6 +72,7 @@ public class LetterTileProvider {
         mDefaultDrawable = c.getResources().getDrawable(R.drawable.ic_tile_generic);
         mTileColorPicker = colorPicker;
     }
+
     public Bitmap makeCircle(final Dimensions dimensions, Bitmap input) {
         final Bitmap bitmap = getBitmap(dimensions);
         if (bitmap == null) {
@@ -78,16 +83,16 @@ public class LetterTileProvider {
 
         final Paint p = new Paint();
         final Rect dst = new Rect(0, 0, dimensions.width, dimensions.height);
-        
-        double kw = ((double)input.getWidth()) / ((double)dimensions.width);
-        double kh = ((double)input.getHeight()) / ((double)dimensions.height);
-        
+
+        double kw = ((double) input.getWidth()) / ((double) dimensions.width);
+        double kh = ((double) input.getHeight()) / ((double) dimensions.height);
+
         double nw = dimensions.width * Math.min(kw, kh);
         double nh = dimensions.height * Math.min(kw, kh);
-        int l = (int) Math.round((input.getWidth() - nw)/2.0);
-        int t = (int) Math.round((input.getHeight() - nh)/2.0);
-        int r = (int) Math.round(nw + (input.getWidth() - nw)/2.0);
-        int b = (int) Math.round(nh + (input.getHeight() - nh)/2.0);
+        int l = (int) Math.round((input.getWidth() - nw) / 2.0);
+        int t = (int) Math.round((input.getHeight() - nh) / 2.0);
+        int r = (int) Math.round(nw + (input.getWidth() - nw) / 2.0);
+        int b = (int) Math.round(nh + (input.getHeight() - nh) / 2.0);
         final Rect src = new Rect(l, t, r, b);
 
         p.setAntiAlias(true);
@@ -97,6 +102,7 @@ public class LetterTileProvider {
         c.drawBitmap(input, src, dst, p);
         return bitmap;
     }
+
     public Bitmap getLetterTile(final Dimensions dimensions, final String displayName,
             final String address) {
         final String display = !TextUtils.isEmpty(displayName) ? displayName : address;
@@ -127,16 +133,18 @@ public class LetterTileProvider {
         }
         return bitmap;
     }
+
     private static boolean isEnglishLetterOrDigit(char c) {
         return ('A' <= c && c <= 'Z')
                 || ('a' <= c && c <= 'z')
                 || ('0' <= c && c <= '9');
     }
+
     private Bitmap getBitmap(final Dimensions d) {
         if (d.width <= 0 || d.height <= 0) {
             return null;
         }
-        if(noCache){
+        if (noCache) {
             return Bitmap.createBitmap(d.width, d.height, Bitmap.Config.ARGB_8888);
         }
         final int pos;
@@ -158,7 +166,8 @@ public class LetterTileProvider {
         }
         return bitmap;
     }
-    private int getFontSize(float scale)  {
+
+    private int getFontSize(float scale) {
         if (scale == Dimensions.SCALE_ONE) {
             return mTileLetterFontSize;
         } else {

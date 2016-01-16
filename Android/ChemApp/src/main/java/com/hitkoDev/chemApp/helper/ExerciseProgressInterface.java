@@ -3,18 +3,18 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.hitkoDev.chemApp.rest;
-
-import android.graphics.Bitmap;
+package com.hitkoDev.chemApp.helper;
 
 /**
  *
  * @author hitno
  */
-public interface OnImageLoadedListener {
+public interface ExerciseProgressInterface {
 
-    public void onSuccess(Bitmap image);
+    public void setUnlocked(int sectionId);
 
-    public void onFail(String response);
+    public boolean isUnlocked(int sectionId);
+
+    public int[] getUnlocked();
 
 }

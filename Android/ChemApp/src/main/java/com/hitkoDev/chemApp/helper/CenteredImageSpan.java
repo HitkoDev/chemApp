@@ -34,8 +34,8 @@ public class CenteredImageSpan extends ImageSpan {
             int start, int end,
             Paint.FontMetricsInt fm) {
         Drawable b = getCachedDrawable();
-        if(b.getClass().equals(LoadedDrawable.class)){
-            LoadedDrawable d = (LoadedDrawable)b;
+        if (b.getClass().equals(LoadedDrawable.class)) {
+            LoadedDrawable d = (LoadedDrawable) b;
             d.setFontFactor(paint.getTextSize());
         }
         Rect rect = b.getBounds();
@@ -58,12 +58,14 @@ public class CenteredImageSpan extends ImageSpan {
             int top, int y, int bottom, @NonNull Paint paint) {
         Drawable b = getCachedDrawable();
         int btO = b.getBounds().bottom;
-        if(b.getClass().equals(LoadedDrawable.class)) btO = ((LoadedDrawable)b).getBottomOffset();
-        
+        if (b.getClass().equals(LoadedDrawable.class)) {
+            btO = ((LoadedDrawable) b).getBottomOffset();
+        }
+
         b.setColorFilter(new PorterDuffColorFilter(paint.getColor(), PorterDuff.Mode.SRC_IN));
-        
+
         canvas.save();
-        
+
         int drawableHeight = b.getIntrinsicHeight();
         int fontAscent = paint.getFontMetricsInt().ascent;
         int fontDescent = paint.getFontMetricsInt().descent;
@@ -71,15 +73,15 @@ public class CenteredImageSpan extends ImageSpan {
                 + (drawableHeight - fontDescent + fontAscent) / 2;  // align center to center
 
         canvas.translate(x, transY);
-        
+
         float[] hsv = new float[3];
         Color.colorToHSV(paint.getColor(), hsv);
         float f = 0.75f;
-        hsv[2] = hsv[2] > 0.5f ? (1f - (1f - hsv[2])*f) : hsv[2]*f;
-        
+        hsv[2] = hsv[2] > 0.5f ? (1f - (1f - hsv[2]) * f) : hsv[2] * f;
+
         b.setColorFilter(new PorterDuffColorFilter(Color.HSVToColor(Color.alpha(paint.getColor()), hsv), PorterDuff.Mode.SRC_IN));
         b.draw(canvas);
-        
+
         canvas.restore();
     }
 

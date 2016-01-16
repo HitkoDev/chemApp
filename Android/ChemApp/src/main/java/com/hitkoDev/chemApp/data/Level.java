@@ -15,24 +15,29 @@ import org.json.JSONObject;
  * @author hitno
  */
 public class Level {
-    
+
     private int id;
     private String name;
     private String desc;
     private ArrayList<Section> sections;
-    
-    public Level(JSONObject o) throws JSONException{
-        if(o.has("id")) id = o.getInt("id");
-        if(o.has("name")) name = o.getString("name");
-        if(o.has("description")) desc = o.getString("description");
-        if(o.has("sections")){
+
+    public Level(JSONObject o) throws JSONException {
+        if (o.has("id")) {
+            id = o.getInt("id");
+        }
+        if (o.has("name")) {
+            name = o.getString("name");
+        }
+        if (o.has("description")) {
+            desc = o.getString("description");
+        }
+        if (o.has("sections")) {
             JSONArray sec = o.getJSONArray("sections");
             sections = new ArrayList();
-            for(int i = 0; i < sec.length(); i++){
+            for (int i = 0; i < sec.length(); i++) {
                 sections.add(new Section(sec.getJSONObject(i)));
             }
         }
-        System.out.println(name);
     }
 
     public String getName() {
@@ -42,5 +47,5 @@ public class Level {
     public int getId() {
         return id;
     }
-    
+
 }

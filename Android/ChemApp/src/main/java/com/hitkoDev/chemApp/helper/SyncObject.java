@@ -3,18 +3,18 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.hitkoDev.chemApp.rest;
+package com.hitkoDev.chemApp.helper;
 
-import android.graphics.Bitmap;
+import java.io.Serializable;
 
 /**
  *
  * @author hitno
  */
-public interface OnImageLoadedListener {
+public class SyncObject implements Serializable {
 
-    public void onSuccess(Bitmap image);
-
-    public void onFail(String response);
+    public int level = 0;
+    public int section = 0;
+    public int[] unlocked = {};
 
 }

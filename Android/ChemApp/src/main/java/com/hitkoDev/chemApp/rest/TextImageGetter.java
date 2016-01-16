@@ -16,10 +16,10 @@ import com.hitkoDev.chemApp.data.LoadedDrawable.OnDrawableUpdatedListener;
  * @author hitno
  */
 public class TextImageGetter implements ImageGetter {
-    
+
     private final Context context;
     private final OnDrawableUpdatedListener listener;
-    
+
     public TextImageGetter(Context c, OnDrawableUpdatedListener l) {
         context = c;
         listener = l;
@@ -29,5 +29,5 @@ public class TextImageGetter implements ImageGetter {
     public Drawable getDrawable(String source) {
         return new LoadedDrawable(context, source, listener);
     }
-    
+
 }

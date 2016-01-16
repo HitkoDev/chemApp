@@ -15,7 +15,6 @@ import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
-import java.io.File;
 import org.json.JSONObject;
 
 /**
@@ -37,7 +36,9 @@ public class SendJSONDataTask extends AsyncTask<String, Void, String> {
         StringBuilder url = new StringBuilder(context.getString(R.string.rest_base));
         int i = 0;
         for (String s : urls) {
-            if(i > 0) url.append(s).append('/');
+            if (i > 0) {
+                url.append(s).append('/');
+            }
             i++;
         }
         return url.toString();
@@ -71,10 +72,14 @@ public class SendJSONDataTask extends AsyncTask<String, Void, String> {
             listener.onFail(result);
             return;
         }
-        
+
         try {
-            if (json.has("success") && !json.getBoolean("success")) throw new Exception(json.has("message") ? json.getString("message") : "Unknown response");
-            if (listener != null) listener.onSuccess(json);
+            if (json.has("success") && !json.getBoolean("success")) {
+                throw new Exception(json.has("message") ? json.getString("message") : "Unknown response");
+            }
+            if (listener != null) {
+                listener.onSuccess(json);
+            }
         } catch (Exception ex) {
             listener.onFail(ex.toString());
         }

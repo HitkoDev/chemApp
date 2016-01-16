@@ -52,11 +52,10 @@
             android:paddingLeft="@dimen/activity_horizontal_margin"
             android:orientation="vertical">
             
-            <CheckBox
+            <ImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:button="@drawable/boomark"
-                android:text=""
                 android:id="@+id/section_bookmark"/>
             
             <CheckBox

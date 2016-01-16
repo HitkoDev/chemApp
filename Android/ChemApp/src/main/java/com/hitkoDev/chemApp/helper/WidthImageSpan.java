@@ -30,9 +30,9 @@ public class WidthImageSpan extends ImageSpan {
             int start, int end, float x,
             int top, int y, int bottom, @NonNull Paint paint) {
         Drawable b = getCachedDrawable();
-        if(b.getClass().equals(LoadedDrawable.class)){
-            LoadedDrawable d = (LoadedDrawable)b;
-            d.setFactor(d.getRealWidth() > canvas.getWidth() ? ((float)canvas.getWidth())/((float)d.getRealWidth()) : 1f);
+        if (b.getClass().equals(LoadedDrawable.class)) {
+            LoadedDrawable d = (LoadedDrawable) b;
+            d.setFactor(d.getRealWidth() > canvas.getWidth() ? ((float) canvas.getWidth()) / ((float) d.getRealWidth()) : 1f);
         }
         super.draw(canvas, text, start, end, x, top, y, bottom, paint);
     }

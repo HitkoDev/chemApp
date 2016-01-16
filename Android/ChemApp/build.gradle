@@ -60,6 +60,7 @@ dependencies {
     compile 'com.android.support:design:23.+'
     compile "com.google.android.gms:play-services-games:8.+"
     compile "com.google.android.gms:play-services-plus:8.+"
+    compile "com.google.android.gms:play-services-drive:8.+"
     compile project(':BaseGameUtils')
 }
 

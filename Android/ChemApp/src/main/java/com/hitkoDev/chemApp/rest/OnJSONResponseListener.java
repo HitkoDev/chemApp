@@ -12,8 +12,9 @@ import org.json.JSONObject;
  * @author hitno
  */
 public interface OnJSONResponseListener {
-    
+
     public void onSuccess(JSONObject response);
+
     public void onFail(String response);
-    
+
 }

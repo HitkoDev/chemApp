@@ -17,11 +17,8 @@ import com.squareup.okhttp.Response;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.json.JSONObject;
 
 /**
@@ -67,7 +64,6 @@ public class LoadDataTask extends AsyncTask<String, Void, String> {
             try (InputStream is = new FileInputStream(file)) {
                 return IOLib.readStream(is);
             } catch (Exception ex) {
-                Logger.getLogger(LoadDataTask.class.getName()).log(Level.SEVERE, null, ex);
                 return ex.toString();
             }
         } else {
@@ -84,11 +80,15 @@ public class LoadDataTask extends AsyncTask<String, Void, String> {
             listener.onFail(result);
             return;
         }
-        
+
         try {
-            if (json.has("success") && !json.getBoolean("success")) throw new Exception(json.has("message") ? json.getString("message") : "Unknown response");
+            if (json.has("success") && !json.getBoolean("success")) {
+                throw new Exception(json.has("message") ? json.getString("message") : "Unknown response");
+            }
             new StoreFileTask().execute(result);
-            if (listener != null) listener.onSuccess(json);
+            if (listener != null) {
+                listener.onSuccess(json);
+            }
         } catch (Exception ex) {
             listener.onFail(ex.toString());
         }
@@ -108,8 +108,7 @@ public class LoadDataTask extends AsyncTask<String, Void, String> {
 
             try (OutputStream os = new FileOutputStream(file)) {
                 os.write(result.getBytes());
-            } catch (IOException ex) {
-                Logger.getLogger(LoadDataTask.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (Exception ex) {
             }
 
             return null;
