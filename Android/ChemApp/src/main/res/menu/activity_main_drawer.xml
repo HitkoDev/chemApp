@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group 
+        android:id="@+id/nav_app"
+        android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_sections"
+            android:icon="@drawable/ic_menu_sections"
+            android:title="Poglavja" />
+        <item
+            android:id="@+id/nav_lessons"
+            android:icon="@drawable/ic_menu_lessons"
+            android:title="Učenje" />
+        <item
+            android:id="@+id/nav_exercises"
+            android:icon="@drawable/ic_menu_exercises"
+            android:title="Vaje" />
+        <item
+            android:id="@+id/nav_exam"
+            android:icon="@drawable/ic_menu_exam"
+            android:title="Test" />
+    </group>
+
+    <group 
+        android:id="@+id/nav_about"
+        android:checkableBehavior="none">
+        <item
+            android:id="@+id/nav_settings"
+            android:icon="@drawable/ic_menu_settings"
+            android:title="Nastavitve" />
+        <item
+            android:id="@+id/nav_help"
+            android:icon="@drawable/ic_menu_help"
+            android:title="Pomoč" />
+    </group>
+
+</menu>

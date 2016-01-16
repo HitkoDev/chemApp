@@ -1,0 +1,7 @@
+**/private
+**/.gradle
+**/.nb-gradle
+**/.idea
+**/build
+**/local.properties
+**/chemapp.keystore
