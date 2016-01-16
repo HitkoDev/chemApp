@@ -354,6 +354,7 @@ public class ExercisesFragment extends Fragment {
 
         View view;
         TextView content;
+        TextView label;
         EditText input;
         Exercise.Input.Field field;
         LinearLayout wrap;
@@ -364,6 +365,7 @@ public class ExercisesFragment extends Fragment {
             view = v;
             input = (EditText) v.findViewById(R.id.exercise_input);
             content = (TextView) v.findViewById(R.id.exercise_text);
+            label = (TextView) v.findViewById(R.id.exercise_label);
             wrap = (LinearLayout) v.findViewById(R.id.exercise_input_wrap);
             original = input.getTextColors();
             input.addTextChangedListener(new TextWatcher() {
@@ -422,6 +424,7 @@ public class ExercisesFragment extends Fragment {
                 vh.content.setText(exercise.getContentParsed());
                 vh.content.setVisibility(View.VISIBLE);
                 vh.input.setVisibility(View.GONE);
+                vh.label.setVisibility(View.GONE);
 
                 vh.wrap.setPadding(marginFull, marginFull, marginFull, marginItems);
 
@@ -429,8 +432,14 @@ public class ExercisesFragment extends Fragment {
             } else {
                 Exercise.Input.Field fl = exercise.getFields().get(i - 1);
                 vh.field = fl;
-                vh.input.setHint(fl.getLabelParsed() == null ? "" : fl.getLabelParsed());
+                if(fl.getLabelParsed() == null){
+                    vh.label.setVisibility(View.GONE);
+                } else {
+                    vh.label.setVisibility(View.VISIBLE);
+                    vh.label.setText(fl.getLabelParsed());
+                }
                 vh.input.setVisibility(View.VISIBLE);
+                vh.content.setVisibility(View.GONE);
                 vh.input.setText(fl.value);
 
                 if (fl.isValidated()) {
@@ -469,7 +478,6 @@ public class ExercisesFragment extends Fragment {
                         vh.input.setInputType(EditorInfo.TYPE_CLASS_TEXT | EditorInfo.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
                         break;
                 }
-                vh.content.setVisibility(View.GONE);
             }
             vh.view.setLayoutParams(params);
         }
