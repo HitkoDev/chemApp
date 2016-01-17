@@ -107,7 +107,7 @@ public class SectionsFragment extends Fragment {
     public void onStart() {
         super.onStart();
         started = true;
-        loadSections(settings.getInt("level", 0));
+        loadSections(Integer.parseInt(settings.getString("level", "0")));
     }
 
     @Override
