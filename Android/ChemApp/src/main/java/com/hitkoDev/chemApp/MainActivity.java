@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -39,8 +40,11 @@ import com.google.android.gms.games.Games;
 import com.google.example.games.basegameutils.BaseGameUtils;
 import com.hitkoDev.chemApp.fragment.ExamFragment;
 import com.hitkoDev.chemApp.fragment.ExerciseFragment;
+import com.hitkoDev.chemApp.fragment.HelpFragment;
 import com.hitkoDev.chemApp.fragment.LessonsFragment;
 import com.hitkoDev.chemApp.fragment.SectionsFragment;
+import com.hitkoDev.chemApp.fragment.SettingsFragment;
+import com.hitkoDev.chemApp.fragment.SettingsFragment.PreferenceAttachedListener;
 import com.hitkoDev.chemApp.fragment.SplashFragment;
 import com.hitkoDev.chemApp.helper.ExerciseProgressInterface;
 import com.hitkoDev.chemApp.helper.FragmentActionsListener;
@@ -61,6 +65,7 @@ public class MainActivity extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
         ExerciseProgressInterface,
+        PreferenceAttachedListener,
         FragmentActionsListener {
 
     private final static int LESSONS = 1;
@@ -72,6 +77,8 @@ public class MainActivity extends AppCompatActivity implements
     private final static String FRAGMENT_LESSONS = "ChemApp.Lessons";
     private final static String FRAGMENT_SECTIONS = "ChemApp.Sections";
     private final static String FRAGMENT_SPLASH = "ChemApp.Splash";
+    private final static String FRAGMENT_SETTINGS = "ChemApp.Settings";
+    private final static String FRAGMENT_HELP= "ChemApp.Help";
 
     private final static String SAVE_TAG = "ChemApp.Progress";
 
@@ -105,13 +112,23 @@ public class MainActivity extends AppCompatActivity implements
     private SplashFragment splashFragment;
 
     private final Set<Integer> unlocked = new HashSet();
+    private SettingsFragment settingsFragment;
+    private HelpFragment helpFragment;
 
     @Override
     protected void onCreate(Bundle bundle) {
         super.onCreate(bundle);
         settings = getSharedPreferences(ChemApp.PREF_NAME, 0);
+        settings.registerOnSharedPreferenceChangeListener(new OnSharedPreferenceChangeListener() {
+            @Override
+            public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+                if(key.equals("level")){
+                    updateLevel(Integer.parseInt(settings.getString("level", "1")));
+                }
+            }
+        });
         prefEditor = settings.edit();
-        level = settings.getInt("level", 1);
+        level = Integer.parseInt(settings.getString("level", "1"));
         section = settings.getInt("section", 0);
         mExplicitSignOut = !settings.getBoolean("autoLogin", false);
 
@@ -259,17 +276,16 @@ public class MainActivity extends AppCompatActivity implements
         int id = item.getItemId();
 
         if (id == R.id.action_settings) {
+            showSettings();
             return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
-
-    private void setLevel(int l) {
+    
+    private void updateLevel(int l){
         boolean invalidate = level != l;
         level = l;
-        prefEditor.putInt("level", l);
-        prefEditor.commit();
         TextView tw = (TextView) navigationView.getHeaderView(0).findViewById(R.id.textView);
         tw.setText("");
         if (level > 0) {
@@ -297,6 +313,11 @@ public class MainActivity extends AppCompatActivity implements
                 }
             }
         }
+    }
+
+    private void setLevel(int l) {
+        prefEditor.putString("level", l + "");
+        prefEditor.commit();
     }
 
     @Override
@@ -361,6 +382,10 @@ public class MainActivity extends AppCompatActivity implements
                     showExam();
                     break;
                 case R.id.nav_settings:
+                    showSettings();
+                    break;
+                case R.id.nav_help:
+                    showHelp();
                     break;
                 default:
                     break;
@@ -409,6 +434,22 @@ public class MainActivity extends AppCompatActivity implements
             examFragment = new ExamFragment();
         }
         getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, examFragment, FRAGMENT_EXAM).addToBackStack(FRAGMENT_EXAM).commit();
+    }
+
+    private void showHelp() {
+
+        if (helpFragment == null) {
+            helpFragment = new HelpFragment();
+        }
+        getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, helpFragment, FRAGMENT_HELP).addToBackStack(FRAGMENT_HELP).commit();
+    }
+
+    private void showSettings() {
+
+        if (settingsFragment == null) {
+            settingsFragment = new SettingsFragment();
+        }
+        getSupportFragmentManager().beginTransaction().replace(R.id.main_frame, settingsFragment, FRAGMENT_SETTINGS).addToBackStack(FRAGMENT_SETTINGS).commit();
     }
 
     public void updateDrawerMenu(View v) {
@@ -498,7 +539,7 @@ public class MainActivity extends AppCompatActivity implements
         TypedValue val = new TypedValue();
         th.resolveAttribute(R.attr.colorPrimary, val, true);
 
-        Bitmap b = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
+        Bitmap b = BitmapFactory.decodeResource(getResources(), R.drawable.ic_desc);
 
         setTaskDescription(new ActivityManager.TaskDescription(title, b, val.data));
 
@@ -595,6 +636,24 @@ public class MainActivity extends AppCompatActivity implements
             unl[i] = ul[i];
         }
         return unl;
+    }
+
+    @Override
+    public ArrayList<Level> getLevels() {
+        return levels;
+    }
+
+    @Override
+    public int getProgress() {
+        return unlocked.size();
+    }
+
+    @Override
+    public void resetProgress() {
+        unlocked.clear();
+        if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
+            writeSnapshot();
+        }
     }
 
 }

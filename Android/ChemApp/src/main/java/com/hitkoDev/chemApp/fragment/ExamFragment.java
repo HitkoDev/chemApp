@@ -70,7 +70,7 @@ public class ExamFragment extends ExercisesFragment {
             try {
                 o.put("max", 15);
                 o.put("sections", a);
-                o.put("level", settings.getInt("level", 0));
+                o.put("level", Integer.parseInt(settings.getString("level", "0")));
                 new SendJSONDataTask(getContext(), new OnJSONResponseListener() {
                     @Override
                     public void onSuccess(JSONObject response) {
@@ -169,7 +169,7 @@ public class ExamFragment extends ExercisesFragment {
             }
             vh.wrap.setVisibility(View.VISIBLE);
             vh.content.setVisibility(View.GONE);
-            vh.exercise.setText("Vprašanje " + (i + 1));
+            vh.exercise.setText("Naloga " + (i + 1));
             vh.score.setText(String.format("%.2f / 1", partialScores[i]));
             if (Math.abs(1 - partialScores[i]) < 0.001) {
                 vh.icon.setImageResource(R.drawable.ic_correct);

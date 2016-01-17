@@ -17,5 +17,7 @@
     
     <string name="continue_learning">Nadaljuj z učenjem</string>
     <string name="take_exam">Preveri znanje</string>
+    <string name="settings">Nastavitve</string>
+    <string name="help_content">ChemApp \u00A9 2016</string>
     
 </resources>

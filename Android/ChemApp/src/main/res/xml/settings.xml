@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <android.support.v7.preference.ListPreference
+        android:key="level"
+        android:title="Nivo znanja"
+        android:dialogTitle="Nivo znanja"
+        android:summary="%s"
+        android:defaultValue="0" />
+    <android.support.v7.preference.Preference
+        android:key="reset"
+        android:title="Ponastavi napredek"
+        android:defaultValue="0" />
+</PreferenceScreen>

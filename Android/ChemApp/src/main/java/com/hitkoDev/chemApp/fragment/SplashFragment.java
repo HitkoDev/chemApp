@@ -15,6 +15,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import com.hitkoDev.chemApp.ChemApp;
 import com.hitkoDev.chemApp.R;
+import com.hitkoDev.chemApp.helper.ExerciseProgressInterface;
 import com.hitkoDev.chemApp.helper.FragmentActionsListener;
 
 /**
@@ -27,7 +28,27 @@ public class SplashFragment extends Fragment {
     private Button takeExam;
     private SharedPreferences settings;
     private SharedPreferences.Editor prefEditor;
-    private FragmentActionsListener listener;
+
+    protected FragmentActionsListener listener;
+    protected ExerciseProgressInterface progressListener;
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof FragmentActionsListener) {
+            listener = (FragmentActionsListener) context;
+        }
+        if (context instanceof ExerciseProgressInterface) {
+            progressListener = (ExerciseProgressInterface) context;
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        listener = null;
+        progressListener = null;
+    }
 
     @Override
     public View onCreateView(LayoutInflater li, ViewGroup vg, Bundle bundle) {
@@ -43,24 +64,10 @@ public class SplashFragment extends Fragment {
     }
 
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof FragmentActionsListener) {
-            listener = (FragmentActionsListener) context;
-        }
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        listener = null;
-    }
-
-    @Override
     public void onStart() {
         super.onStart();
         continueLearning.setEnabled(settings.getInt("section", 0) > 0);
-        takeExam.setEnabled(settings.getInt("level", 0) > 0);
+        takeExam.setEnabled(progressListener != null && progressListener.getUnlocked().length > 0);
         if (listener != null) {
             listener.setFragmentDescription(getContext().getString(R.string.app_name));
         }
